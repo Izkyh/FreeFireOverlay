@@ -69,6 +69,8 @@
         
         .team-logo { width: 30px; height: 30px; object-fit: contain; margin-right: 10px; vertical-align: middle; }
         .team-name-text { vertical-align: middle; }
+        .team-row.is-dead .team-logo { filter: grayscale(1); opacity: 0.45; }
+        .team-row.is-dead .team-name-text { color: #888; }
 
         /* Staggered Animations */
         .team-list .team-row:nth-child(1) { transition-delay: 0.1s; }
@@ -117,10 +119,10 @@
         list.innerHTML = '';
         for (let i = 1; i <= 20; i++) {
             list.innerHTML += `
-                <div class="team-row">
+                <div class="team-row" id="row_${i}">
                     <div class="col-rank" id="f_rank_${i}">#${i}</div>
                     <div class="col-team">
-                        <img class="team-logo" src="team_logos/placeholder.png" onerror="this.style.display='none'">
+                        <img class="team-logo" src="images/placeholder.png" onerror="this.style.display='none'">
                         <span class="team-name-text" id="f_team_${i}">Team ${i}</span>
                     </div>
                     <div class="col-pts" id="f_pts_${i}">0</div>
@@ -194,6 +196,8 @@
                 else if (t.alive === 1) aliveStr = "WDDD";
                 
                 newData[`f_alive_${teamIndex}`] = aliveStr;
+                const row = document.getElementById(`row_${teamIndex}`);
+                if (row) row.classList.toggle("is-dead", t.status === "DEAD" || t.alive === 0);
             });
             update(newData);
         }

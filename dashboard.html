@@ -921,6 +921,8 @@
       // ============================================================
       let state = {
         teams: [],
+        postmatch: [],
+        auto_eliminated_ids: [],
         eliminated_trigger: { team_name: "", kills: 0, timestamp: 0 },
       };
       for (let i = 1; i <= 20; i++) {
@@ -946,6 +948,8 @@
       let countdownInterval = null;
       let countdownVal = 10;
       const SYNC_EVERY = 10;
+      const AUTO_ELIM_DELAY_MS = 2500;
+      let autoElimTimers = {};
 
       function connectSheets() {
         const url = document.getElementById("sheets-url").value.trim();
@@ -1029,12 +1033,29 @@
               const idx = state.teams.findIndex((t) => t.id === remote.id);
               if (idx === -1) return;
               const local = state.teams[idx];
+              const alive =
+                remote.alive !== undefined
+                  ? Math.max(0, Math.min(4, parseInt(remote.alive) || 0))
+                  : local.alive;
+              const kills =
+                remote.kills !== undefined
+                  ? Math.max(0, parseInt(remote.kills) || 0)
+                  : local.kills;
+              const rank =
+                remote.rank !== undefined
+                  ? Math.max(1, parseInt(remote.rank) || local.rank)
+                  : local.rank;
+              const wwcd =
+                remote.wwcd !== undefined
+                  ? Math.max(0, parseInt(remote.wwcd) || 0)
+                  : local.wwcd || 0;
+              const status = remote.status || (alive === 0 ? "DEAD" : "ALIVE");
               if (
-                local.alive !== remote.alive ||
-                local.kills !== remote.kills ||
-                local.rank !== remote.rank ||
+                local.alive !== alive ||
+                local.kills !== kills ||
+                local.rank !== rank ||
                 local.name !== remote.name ||
-                local.wwcd !== remote.wwcd
+                local.wwcd !== wwcd
               ) {
                 changedIds.push(remote.id);
               }
@@ -1042,9 +1063,9 @@
               const place_pts =
                 remote.place_pts !== undefined
                   ? remote.place_pts
-                  : getPlacementPts(remote.rank);
+                  : getPlacementPts(rank);
               const kill_pts =
-                remote.kill_pts !== undefined ? remote.kill_pts : remote.kills;
+                remote.kill_pts !== undefined ? remote.kill_pts : kills;
               const total =
                 remote.total !== undefined
                   ? remote.total
@@ -1052,11 +1073,44 @@
               state.teams[idx] = {
                 ...local,
                 ...remote,
+                alive,
+                status,
+                kills,
+                rank,
+                wwcd,
                 place_pts,
                 kill_pts,
                 total,
               };
             });
+            if (Array.isArray(data.postmatch)) {
+              state.postmatch = data.postmatch.map((row) => {
+                const rank = Math.max(1, parseInt(row.rank) || 1);
+                const kills = Math.max(0, parseInt(row.kills) || 0);
+                const place_pts =
+                  row.place_pts !== undefined
+                    ? parseInt(row.place_pts) || 0
+                    : getPlacementPts(rank);
+                const kill_pts =
+                  row.kill_pts !== undefined ? parseInt(row.kill_pts) || 0 : kills;
+                const total =
+                  row.total !== undefined
+                    ? parseInt(row.total) || 0
+                    : place_pts + kill_pts;
+                return {
+                  ...row,
+                  match: Math.max(1, parseInt(row.match) || 1),
+                  id: parseInt(row.id) || 0,
+                  rank,
+                  kills,
+                  wwcd: Math.max(0, parseInt(row.wwcd) || 0),
+                  place_pts,
+                  kill_pts,
+                  total,
+                };
+              });
+            }
+            scheduleAutoEliminations();
             renderAll(changedIds);
             saveState();
             document.getElementById("sheets-badge").classList.add("show");
@@ -1198,7 +1252,8 @@
             const place_pts = getPlacementPts(t.rank);
             const kill_pts = t.kills;
             const total = place_pts + kill_pts;
-            return { ...t, place_pts, kill_pts, total };
+            const wwcd = Math.max(0, parseInt(t.wwcd) || 0);
+            return { ...t, wwcd, place_pts, kill_pts, total };
           })
           .sort(
             (a, b) =>
@@ -1240,15 +1295,18 @@
       function setAlive(index, val) {
         state.teams[index].alive = val;
         state.teams[index].status = val === 0 ? "DEAD" : "ALIVE";
+        if (val > 0) clearAutoElim(state.teams[index].id, true);
         renderTickerList();
         renderElimGrid();
         renderStandings();
         saveState();
+        scheduleAutoEliminations();
       }
       function setMiss(index) {
         state.teams[index].status =
           state.teams[index].status === "MISS" ? "ALIVE" : "MISS";
         state.teams[index].alive = state.teams[index].status === "MISS" ? 0 : 4;
+        clearAutoElim(state.teams[index].id, true);
         renderTickerList();
         renderElimGrid();
         renderStandings();
@@ -1272,10 +1330,11 @@
         state.teams[index].wwcd = parseInt(val) || 0;
         saveState();
       }
-      function triggerEliminated(index) {
+      function triggerEliminated(index, source = "manual") {
         let t = state.teams[index];
         t.alive = 0;
         t.status = "DEAD";
+        markAutoEliminated(t.id);
         state.eliminated_trigger = {
           team_name: t.name,
           kills: t.kills,
@@ -1284,6 +1343,53 @@
         renderAll();
         saveState();
         showNotif(`💀 ELIMINATED! ${t.name}`, "danger");
+      }
+
+      function markAutoEliminated(teamId) {
+        if (!state.auto_eliminated_ids) state.auto_eliminated_ids = [];
+        if (!state.auto_eliminated_ids.includes(teamId)) {
+          state.auto_eliminated_ids.push(teamId);
+        }
+      }
+
+      function clearAutoElim(teamId, allowRetrigger = false) {
+        if (autoElimTimers[teamId]) {
+          clearTimeout(autoElimTimers[teamId]);
+          delete autoElimTimers[teamId];
+        }
+        if (allowRetrigger && Array.isArray(state.auto_eliminated_ids)) {
+          state.auto_eliminated_ids = state.auto_eliminated_ids.filter(
+            (id) => id !== teamId,
+          );
+        }
+      }
+
+      function scheduleAutoEliminations() {
+        if (!Array.isArray(state.auto_eliminated_ids)) {
+          state.auto_eliminated_ids = [];
+        }
+        state.teams.forEach((team) => {
+          const isDead = team.status === "DEAD" && team.alive === 0;
+          const alreadyTriggered = state.auto_eliminated_ids.includes(team.id);
+          if (!isDead) {
+            clearAutoElim(team.id, true);
+            return;
+          }
+          if (alreadyTriggered || autoElimTimers[team.id]) return;
+          autoElimTimers[team.id] = setTimeout(() => {
+            delete autoElimTimers[team.id];
+            const currentIndex = state.teams.findIndex((t) => t.id === team.id);
+            const current = state.teams[currentIndex];
+            if (
+              current &&
+              current.status === "DEAD" &&
+              current.alive === 0 &&
+              !state.auto_eliminated_ids.includes(current.id)
+            ) {
+              triggerEliminated(currentIndex, "auto");
+            }
+          }, AUTO_ELIM_DELAY_MS);
+        });
       }
 
       // ============================================================
@@ -1304,6 +1410,7 @@
             t.place_pts = getPlacementPts(t.rank);
             t.kill_pts = t.kills;
             t.total = t.place_pts + t.kill_pts;
+            t.wwcd = Math.max(0, parseInt(t.wwcd) || 0);
           });
           localStorage.setItem("pubgm_overlay_state", JSON.stringify(state));
           pushToServer(state);
@@ -1322,7 +1429,16 @@
         if (saved) {
           try {
             let data = JSON.parse(saved);
-            if (data && data.teams && data.teams.length === 20) state = data;
+            if (data && data.teams && data.teams.length === 20) {
+              state = {
+                ...state,
+                ...data,
+                postmatch: Array.isArray(data.postmatch) ? data.postmatch : [],
+                auto_eliminated_ids: Array.isArray(data.auto_eliminated_ids)
+                  ? data.auto_eliminated_ids
+                  : [],
+              };
+            }
           } catch (e) {}
         }
         const savedUrl = localStorage.getItem("pubgm_sheets_url");
@@ -1335,6 +1451,7 @@
           startSync();
         }
         renderAll();
+        scheduleAutoEliminations();
         document.getElementById("status-dot").className = "status-dot ok";
         document.getElementById("status-text").textContent = "Connected ✓";
         if (!sheetsUrl) saveState();
@@ -1347,6 +1464,7 @@
             if (d && d.teams) {
               state = d;
               renderAll();
+              scheduleAutoEliminations();
             }
           } catch (e) {}
         }
