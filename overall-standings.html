@@ -1,378 +1,482 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Overall Standings</title>
-    <link rel="stylesheet" href="css/standard.css" />
-    <style>
-      @font-face {
-        font-family: "AgencyFB";
-        src: url("fonts/agency_fb.ttf") format("truetype");
-      }
-      body,
-      html {
-        margin: 0;
-        padding: 0;
-        width: 1920px;
-        height: 1080px;
-        overflow: hidden;
-        font-family: "AgencyFB", sans-serif;
-        color: white;
-        background: transparent;
-      }
-      #container {
-        width: 1920px;
-        height: 1080px;
-        position: absolute;
-        top: 0;
-        left: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        opacity: 0;
-        transition: opacity 0.5s ease-in-out;
-        background-color: transparent;
-      }
-      #container.show {
-        opacity: 1;
-      }
 
-      .content-wrapper {
-        width: 1650px;
-        display: flex;
-        flex-direction: column;
-        transform: translateY(20px);
-      }
+<head>
+  <meta charset="UTF-8" />
+  <title>Overall Rankings (Single Column)</title>
+  <link rel="stylesheet" href="css/standard.css" />
+  <style>
+    @font-face {
+      font-family: "AgencyFB";
+      src: url("fonts/agency_fb.ttf") format("truetype");
+    }
 
-      .header-bar {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
-        margin-bottom: 30px;
-        transform: translateY(-30px);
-        opacity: 0;
-        transition: all 0.6s ease;
-      }
-      #container.show .header-bar {
-        transform: translateY(0);
-        opacity: 1;
-      }
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      font-family: "AgencyFB", sans-serif;
+      color: white;
+      background: transparent;
+    }
 
-      .title-left {
-        font-size: 80px;
-        font-weight: bold;
-        letter-spacing: 3px;
-        text-shadow: 2px 5px 15px rgba(0, 0, 0, 0.6);
-        line-height: 0.9;
-      }
-      .title-right {
-        display: flex;
-        align-items: flex-end;
-        gap: 15px;
-      }
-      .title-right-text {
-        font-size: 28px;
-        text-transform: uppercase;
-        text-align: right;
-        line-height: 1.1;
-        padding-bottom: 10px;
-        color: #e0e0e0;
-        font-weight: bold;
-      }
-      .title-right-number {
-        font-size: 90px;
-        font-weight: bold;
-        line-height: 0.75;
-        text-shadow: 2px 5px 15px rgba(0, 0, 0, 0.6);
-      }
+    #container {
+      width: 960px;
+      height: 1080px;
+      position: absolute;
+      top: 0;
+      right: 0;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(180deg, #080808 0%, #101010 100%);
+    }
 
-      .table-headers {
-        display: flex;
-        font-size: 38px;
-        font-weight: bold;
-        padding: 0 10px 15px 10px;
-        color: #d1d9e6;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        transform: translateX(-50px);
-        opacity: 0;
-        transition: all 0.6s ease;
-      }
-      #container.show .table-headers {
-        transform: translateX(0);
-        opacity: 1;
-        transition-delay: 0.1s;
-      }
+    #container.show {
+      opacity: 1;
+    }
 
-      .col-rank {
-        width: 8%;
-        text-align: center;
-      }
-      .col-team {
-        width: 42%;
-        padding-left: 20px;
-      }
-      .col-wwcd {
-        width: 10%;
-        text-align: center;
-      }
-      .col-place {
-        width: 10%;
-        text-align: center;
-      }
-      .col-kill {
-        width: 10%;
-        text-align: center;
-      }
-      .col-total {
-        width: 10%;
-        text-align: center;
-      }
-      .col-pts {
-        width: 10%;
-        text-align: center;
-      }
+    /* ===== GOLD TOP ===== */
+    .gold-top {
+      height: 4px;
+      flex-shrink: 0;
+      background: linear-gradient(90deg, #6B5010, #F0C040 40%, #C89B3C 60%, #6B5010);
+    }
 
-      .team-list {
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-      }
-      .team-row {
-        display: flex;
-        align-items: center;
-        font-size: 42px;
-        font-weight: bold;
-        padding: 12px 10px;
-        background: linear-gradient(
-          90deg,
-          #1b315c 0%,
-          #29487d 50%,
-          #1b315c 100%
-        );
-        border: 2px solid #5a7cae;
-        border-radius: 8px;
-        box-shadow:
-          0 8px 20px rgba(0, 0, 0, 0.5),
-          inset 0 2px 5px rgba(255, 255, 255, 0.2);
-        opacity: 0;
-        transform: translateY(30px);
-        transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-      }
-      #container.show .team-row {
-        opacity: 1;
-        transform: translateY(0);
-      }
-      .team-row > div {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .team-row .col-team {
-        justify-content: flex-start;
-      }
-      .team-row .col-rank {
-        font-size: 38px;
-        color: #e0e0e0;
-      }
+    /* ===== HEADER ===== */
+    .header-bar {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 14px 18px 10px;
+      flex-shrink: 0;
+      /* Slide from right */
+      opacity: 0;
+      transform: translateX(20px);
+      transition: all 0.55s ease;
+    }
 
-      .col-wwcd::before,
-      .col-place::before,
-      .col-kill::before,
-      .col-total::before,
-      .col-pts::before {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 15%;
-        height: 70%;
-        width: 2px;
-        background-color: #a4bde0;
-        opacity: 0.6;
-      }
-      .table-headers .col-wwcd::before,
-      .table-headers .col-place::before,
-      .table-headers .col-kill::before,
-      .table-headers .col-total::before,
-      .table-headers .col-pts::before {
-        display: none;
-      }
+    #container.show .header-bar {
+      opacity: 1;
+      transform: translateX(0);
+      transition-delay: 0.05s;
+    }
 
-      .team-logo {
-        width: 55px;
-        height: 55px;
-        object-fit: contain;
-        margin-right: 20px;
-      }
-      .team-name-text {
-        text-transform: uppercase;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        letter-spacing: 1px;
-      }
+    .title-left {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
 
-      /* Gold for 1st */
-      .team-list .team-row:nth-child(1) {
-        transition-delay: 0.2s;
-        background: linear-gradient(
-          90deg,
-          #4b4115 0%,
-          #8b7527 50%,
-          #4b4115 100%
-        );
-        border-color: #ffd700;
-      }
-      .team-list .team-row:nth-child(2) {
-        transition-delay: 0.25s;
-      }
-      .team-list .team-row:nth-child(3) {
-        transition-delay: 0.3s;
-      }
-      .team-list .team-row:nth-child(4) {
-        transition-delay: 0.35s;
-      }
-      .team-list .team-row:nth-child(5) {
-        transition-delay: 0.4s;
-      }
-      .team-list .team-row:nth-child(6) {
-        transition-delay: 0.45s;
-      }
-      .team-list .team-row:nth-child(7) {
-        transition-delay: 0.5s;
-      }
-      .team-list .team-row:nth-child(8) {
-        transition-delay: 0.55s;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="container">
-      <div class="content-wrapper">
-        <div class="header-bar">
-          <div class="title-left" id="f_overall_title">OVERALL STANDINGS</div>
-          <div class="title-right">
-            <div class="title-right-text">POST<br />MATCH</div>
-            <div class="title-right-number" id="f_post_match">—</div>
-          </div>
+    .title-eyebrow {
+      font-size: 11px;
+      letter-spacing: 6px;
+      color: #C89B3C;
+      text-transform: uppercase;
+      font-weight: bold;
+    }
+
+    .title-main {
+      font-size: 40px;
+      font-weight: bold;
+      letter-spacing: 3px;
+      line-height: 0.9;
+      background: linear-gradient(180deg, #F5D56A 0%, #C89B3C 45%, #F0C868 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 2px 8px rgba(200, 155, 60, 0.5));
+    }
+
+    .match-info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .match-label {
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: #666;
+      text-transform: uppercase;
+    }
+
+    .match-value {
+      font-size: 22px;
+      font-weight: bold;
+      color: #fff;
+      letter-spacing: 1px;
+    }
+
+    .match-value span {
+      color: #F0C040;
+    }
+
+    /* ===== GOLD DIVIDER ===== */
+    .gold-line {
+      height: 2px;
+      flex-shrink: 0;
+      background: linear-gradient(90deg, transparent, #8B6914 10%, #F0C040 50%, #8B6914 90%, transparent);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    #container.show .gold-line {
+      opacity: 1;
+      transition-delay: 0.15s;
+    }
+
+    /* ===== COLUMN LABELS ===== */
+    .col-labels {
+      display: grid;
+      grid-template-columns: 52px 1fr 100px 82px 96px;
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: #C89B3C;
+      text-transform: uppercase;
+      font-weight: bold;
+      padding: 4px 18px;
+      border-bottom: 1px solid rgba(200, 155, 60, 0.35);
+      flex-shrink: 0;
+      /* Slide from right */
+      opacity: 0;
+      transform: translateX(16px);
+      transition: all 0.45s ease;
+    }
+
+    #container.show .col-labels {
+      opacity: 1;
+      transform: translateX(0);
+      transition-delay: 0.18s;
+    }
+
+    .col-labels>div {
+      text-align: center;
+    }
+
+    .col-labels>div:nth-child(2) {
+      text-align: left;
+      padding-left: 8px;
+    }
+
+    /* ===== TEAM LIST ===== */
+    .team-list {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+      padding: 6px 18px 10px;
+      gap: 4px;
+      box-sizing: border-box;
+    }
+
+    /* ===== TEAM ROW ===== */
+    .team-row {
+      display: grid;
+      grid-template-columns: 52px 1fr 100px 82px 96px;
+      align-items: center;
+      font-size: 17px;
+      font-weight: bold;
+      flex: 1;
+      /* equal height for all 16 rows */
+      padding: 4px 8px;
+      box-sizing: border-box;
+      background: linear-gradient(90deg, #181818 0%, #1E1E1E 50%, #181818 100%);
+      border: 1px solid rgba(255, 255, 255, 0.055);
+      border-radius: 3px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
+      /* Slide from right */
+      opacity: 0;
+      transform: translateX(20px);
+      transition: opacity 0.42s ease, transform 0.42s ease;
+    }
+
+    #container.show .team-row {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    /* Rank-1 highlight */
+    .team-row:first-child {
+      background: linear-gradient(90deg, #231A04 0%, #3B2B06 40%, #4A3508 50%, #3B2B06 60%, #231A04 100%);
+      border-color: rgba(200, 155, 60, 0.6);
+      box-shadow: 0 0 16px rgba(200, 155, 60, 0.2), 0 2px 6px rgba(0, 0, 0, 0.5);
+    }
+
+    .team-row:first-child .r-rank {
+      color: #F0C040;
+      font-size: 19px;
+    }
+
+    .team-row:first-child .r-total {
+      color: #F0C040;
+      font-size: 20px;
+    }
+
+    /* Cells */
+    .r-rank {
+      text-align: center;
+      color: #C89B3C;
+      font-size: 15px;
+      font-weight: bold;
+    }
+
+    .r-team {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow: hidden;
+      padding-left: 6px;
+    }
+
+    .team-logo {
+      width: 26px;
+      height: 26px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
+    .team-name-text {
+      font-size: 16px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: 0.4px;
+    }
+
+    .r-plc,
+    .r-kp,
+    .r-total {
+      text-align: center;
+      position: relative;
+    }
+
+    .r-plc::before,
+    .r-kp::before,
+    .r-total::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 20%;
+      height: 60%;
+      width: 1px;
+      background: rgba(200, 155, 60, 0.2);
+    }
+
+    .r-plc {
+      color: #BBBBBB;
+      font-size: 16px;
+    }
+
+    .r-kp {
+      color: #F0C040;
+      font-size: 16px;
+    }
+
+    .r-total {
+      color: #FFFFFF;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    /* ===== STAGGER (from right) ===== */
+    .team-row:nth-child(1) {
+      transition-delay: 0.20s;
+    }
+
+    .team-row:nth-child(2) {
+      transition-delay: 0.24s;
+    }
+
+    .team-row:nth-child(3) {
+      transition-delay: 0.28s;
+    }
+
+    .team-row:nth-child(4) {
+      transition-delay: 0.32s;
+    }
+
+    .team-row:nth-child(5) {
+      transition-delay: 0.36s;
+    }
+
+    .team-row:nth-child(6) {
+      transition-delay: 0.40s;
+    }
+
+    .team-row:nth-child(7) {
+      transition-delay: 0.44s;
+    }
+
+    .team-row:nth-child(8) {
+      transition-delay: 0.48s;
+    }
+
+    .team-row:nth-child(9) {
+      transition-delay: 0.52s;
+    }
+
+    .team-row:nth-child(10) {
+      transition-delay: 0.56s;
+    }
+
+    .team-row:nth-child(11) {
+      transition-delay: 0.60s;
+    }
+
+    .team-row:nth-child(12) {
+      transition-delay: 0.64s;
+    }
+
+    .team-row:nth-child(13) {
+      transition-delay: 0.68s;
+    }
+
+    .team-row:nth-child(14) {
+      transition-delay: 0.72s;
+    }
+
+    .team-row:nth-child(15) {
+      transition-delay: 0.76s;
+    }
+
+    .team-row:nth-child(16) {
+      transition-delay: 0.80s;
+    }
+
+    /* ===== GOLD BOTTOM ===== */
+    .gold-bottom {
+      height: 3px;
+      flex-shrink: 0;
+      background: linear-gradient(90deg, transparent, #C89B3C 30%, #F0C040 50%, #C89B3C 70%, transparent);
+      opacity: 0.6;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="container">
+    <div class="gold-top"></div>
+
+    <!-- HEADER -->
+    <div class="header-bar">
+      <div class="title-left">
+        <div class="title-eyebrow">Piala Walikota</div>
+        <div class="title-main" id="f_overall_title">OVERALL RANKINGS</div>
+      </div>
+      <div class="match-info">
+        <div class="match-label">POST MATCH</div>
+        <div class="match-value">
+          DAY <span id="f_day">1</span> · M<span id="f_post_match">—</span>
         </div>
-        <div class="table-headers">
-          <div class="col-rank">#</div>
-          <div class="col-team">TEAM NAME</div>
-          <div class="col-wwcd">WWCD</div>
-          <div class="col-place">PLACE PTS</div>
-          <div class="col-kill">KILLS</div>
-          <div class="col-pts">KILL PTS</div>
-          <div class="col-total">TOTAL</div>
-        </div>
-        <div class="team-list" id="team-list"></div>
       </div>
     </div>
 
-    <script>
-      const PLACEMENT_PTS = [12, 9, 8, 7, 6, 5, 4, 3, 2, 1];
-      function getPlacementPts(rank) {
-        if (rank >= 1 && rank <= 10) return PLACEMENT_PTS[rank - 1];
-        return 0;
-      }
+    <!-- GOLD DIVIDER -->
+    <div class="gold-line"></div>
 
-      function generateRows() {
-        const list = document.getElementById("team-list");
-        list.innerHTML = "";
-        for (let i = 1; i <= 8; i++) {
-          list.innerHTML += `
-                <div class="team-row">
-                    <div class="col-rank" id="f_rank_${i}">#${i}</div>
-                    <div class="col-team">
-                        <img class="team-logo" src="team_logos/placeholder.png" onerror="this.style.display='none'">
-                        <span class="team-name-text" id="f_team_${i}">Team ${i}</span>
-                    </div>
-                    <div class="col-wwcd"  id="f_wwcd_${i}">0</div>
-                    <div class="col-place" id="f_place_${i}">0</div>
-                    <div class="col-kill"  id="f_kill_${i}">0</div>
-                    <div class="col-pts"   id="f_pts_${i}">0</div>
-                    <div class="col-total" id="f_total_${i}">0</div>
-                </div>
-            `;
+    <!-- COLUMN LABELS -->
+    <div class="col-labels">
+      <div>#</div>
+      <div>TEAM NAME</div>
+      <div>PLACEMENT</div>
+      <div>KILL PTS</div>
+      <div>TOTAL</div>
+    </div>
+
+    <!-- SINGLE COLUMN TEAM LIST -->
+    <div class="team-list" id="team-list"></div>
+
+    <div class="gold-bottom"></div>
+  </div>
+
+  <script>
+    const PLACEMENT_PTS = [12, 9, 8, 7, 6, 5, 4, 3, 2, 1];
+    function getPlacementPts(rank) {
+      if (rank >= 1 && rank <= 10) return PLACEMENT_PTS[rank - 1];
+      return 0;
+    }
+
+    function buildRow(t, pos) {
+      const plc = t.place_pts !== undefined ? t.place_pts : 0;
+      const kp = t.kill_pts !== undefined ? t.kill_pts : 0;
+      const tot = t.total !== undefined ? t.total : 0;
+      return `
+          <div class="team-row">
+            <div class="r-rank">#${pos}</div>
+            <div class="r-team">
+              <img class="team-logo" src="team_logos/${t.id || pos}.png" onerror="this.style.display='none'">
+              <span class="team-name-text">${t.name || ('TEAM ' + pos)}</span>
+            </div>
+            <div class="r-plc">${plc}</div>
+            <div class="r-kp">${kp}</div>
+            <div class="r-total">${tot}</div>
+          </div>`;
+    }
+
+    function play() { document.getElementById("container").classList.add("show"); }
+    function stop() { document.getElementById("container").classList.remove("show"); }
+
+    function update(str) {
+      try {
+        var data = typeof str === "string" ? JSON.parse(str) : str;
+        for (var key in data) {
+          var val = data[key];
+          if (val && typeof val === "object" && val.v !== undefined) val = val.v;
+          var el = document.getElementById(key);
+          if (el) el.innerHTML = val;
         }
+      } catch (e) { }
+    }
+
+    function processState(state) {
+      if (!state || !state.teams) return;
+      const sorted = state.teams
+        .filter(t => t.status !== "MISS")
+        .map(t => {
+          const place_pts = t.place_pts !== undefined ? t.place_pts : getPlacementPts(t.rank);
+          const kill_pts = t.kill_pts !== undefined ? t.kill_pts : t.kills;
+          const total = t.total !== undefined ? t.total : place_pts + kill_pts;
+          return { ...t, place_pts, kill_pts, total };
+        })
+        .sort((a, b) =>
+          b.total - a.total ||
+          (b.wwcd || 0) - (a.wwcd || 0) ||
+          b.kill_pts - a.kill_pts
+        )
+        .slice(0, 16);
+
+      const list = document.getElementById("team-list");
+      list.innerHTML = "";
+      sorted.forEach((t, i) => { list.innerHTML += buildRow(t, i + 1); });
+    }
+
+    // Placeholder rows on load
+    (function () {
+      const list = document.getElementById("team-list");
+      list.innerHTML = "";
+      for (let i = 1; i <= 16; i++) {
+        list.innerHTML += buildRow({ id: i, name: "TEAM " + i, place_pts: 0, kill_pts: 0, total: 0 }, i);
       }
+    })();
 
-      function play() {
-        document.getElementById("container").classList.add("show");
-      }
-      function stop() {
-        document.getElementById("container").classList.remove("show");
-      }
+    setTimeout(() => play(), 500);
 
-      function update(str) {
-        try {
-          var data = typeof str === "string" ? JSON.parse(str) : str;
-          for (var key in data) {
-            var val = data[key];
-            if (val && typeof val === "object" && val.v !== undefined)
-              val = val.v;
-            var el = document.getElementById(key);
-            if (el) el.innerHTML = val;
-          }
-        } catch (e) {
-          console.error("Update Error:", e);
-        }
-      }
+    fetch("http://localhost:3000/api/state")
+      .then(r => r.json())
+      .then(state => processState(state))
+      .catch(() => { });
 
-      function processState(state) {
-        if (!state || !state.teams) return;
+    const evtSource = new EventSource("http://localhost:3000/api/stream");
+    evtSource.onmessage = (event) => {
+      try { processState(JSON.parse(event.data)); } catch (e) { }
+    };
+  </script>
+</body>
 
-        // Sort by total desc, tiebreak: wwcd desc, then kill_pts desc
-        const sorted = state.teams
-          .filter((t) => t.status !== "MISS")
-          .map((t) => {
-            const place_pts =
-              t.place_pts !== undefined ? t.place_pts : getPlacementPts(t.rank);
-            const kill_pts = t.kill_pts !== undefined ? t.kill_pts : t.kills;
-            const total =
-              t.total !== undefined ? t.total : place_pts + kill_pts;
-            return { ...t, place_pts, kill_pts, total };
-          })
-          .sort(
-            (a, b) =>
-              b.total - a.total ||
-              (b.wwcd || 0) - (a.wwcd || 0) ||
-              b.kill_pts - a.kill_pts,
-          )
-          .slice(0, 8);
-
-        let newData = {};
-        sorted.forEach((t, i) => {
-          const pos = i + 1;
-          newData[`f_rank_${pos}`] = `#${pos}`;
-          newData[`f_team_${pos}`] = t.name;
-          newData[`f_wwcd_${pos}`] = t.wwcd || 0;
-          newData[`f_place_${pos}`] = t.place_pts;
-          newData[`f_kill_${pos}`] = t.kills;
-          newData[`f_pts_${pos}`] = t.kill_pts;
-          newData[`f_total_${pos}`] = t.total;
-        });
-        update(newData);
-      }
-
-      generateRows();
-      setTimeout(() => play(), 500);
-
-      // Load initial state
-      fetch("http://localhost:3000/api/state")
-        .then((r) => r.json())
-        .then((state) => processState(state))
-        .catch((e) => {});
-
-      // Listen real-time
-      const evtSource = new EventSource("http://localhost:3000/api/stream");
-      evtSource.onmessage = (event) => {
-        try {
-          processState(JSON.parse(event.data));
-        } catch (e) {}
-      };
-    </script>
-  </body>
 </html>

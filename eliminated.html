@@ -9,6 +9,7 @@
         font-family: "AgencyFB";
         src: url("fonts/agency_fb.ttf") format("truetype");
       }
+
       body,
       html {
         margin: 0;
@@ -20,6 +21,7 @@
         background: transparent;
       }
 
+      /* ===== CONTAINER ===== */
       #container {
         width: 1920px;
         height: 1080px;
@@ -29,117 +31,214 @@
         display: flex;
         justify-content: center;
         align-items: flex-end;
-        padding-bottom: 150px;
+        padding-bottom: 100px;
+        box-sizing: border-box;
       }
 
-      .eliminated-box {
+      /* ===== MAIN CARD ===== */
+      .eliminated-card {
+        position: relative;
         display: flex;
         flex-direction: column;
-        align-items: center;
-        border: 4px solid var(--elimated-border-color, rgb(9, 125, 202));
-        box-shadow: 0 0 30px rgba(9, 125, 202, 0.8);
-        transform: translateY(300px) scale(0.5);
+        align-items: stretch;
+        width: 860px;
+        /* Slide-up animation */
+        transform: translateY(250px) scale(0.88);
         opacity: 0;
-        transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        transition: transform 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+                    opacity 0.45s ease;
+        filter: drop-shadow(0 0 30px rgba(200, 155, 60, 0.55));
       }
-      #container.show .eliminated-box {
+      #container.show .eliminated-card {
         transform: translateY(0) scale(1);
         opacity: 1;
       }
 
-      .header {
-        background-color: var(
-          --elimated-header-background-color,
-          rgba(255, 255, 255, 0.781)
-        );
-        color: var(--elimated-header-color, rgb(0, 0, 0));
-        text-shadow: var(
-          --elimated-header-text-shadow,
-          0 0 10px rgba(27, 111, 190, 0.733)
-        );
-        font-family: var(--elimated-header-font-family, "AgencyFB", sans-serif);
-        font-size: 50px;
-        font-weight: bold;
-        padding: 5px 60px;
-        width: 100%;
+      /* ===== HEADER BAND ===== */
+      .elim-header {
+        position: relative;
+        background: linear-gradient(90deg, #8B1010 0%, #B01818 40%, #8B1010 100%);
+        padding: 10px 50px;
         text-align: center;
+        border-top: 3px solid #C89B3C;
+        border-left: 3px solid #C89B3C;
+        border-right: 3px solid #C89B3C;
+        clip-path: polygon(0 0, 100% 0, 97% 100%, 3% 100%);
+        z-index: 2;
+      }
+      .elim-header-text {
+        font-size: 36px;
+        font-weight: bold;
+        letter-spacing: 12px;
         text-transform: uppercase;
-        letter-spacing: 5px;
+        color: #FFFFFF;
+        text-shadow: 0 0 18px rgba(200, 155, 60, 0.8),
+                     0 2px 6px rgba(0, 0, 0, 0.9);
       }
 
-      .info-row {
-        display: flex;
-        width: 100%;
-        font-family: var(--elimated-info-font-family, "AgencyFB", sans-serif);
-      }
-
-      .team-part {
-        background-color: var(
-          --elimated-team-background-color,
-          rgb(7, 93, 143)
-        );
-        color: var(--elimated-team-color, rgb(255, 255, 255));
-        text-shadow: var(
-          --elimated-team-text-shadow,
-          0 0 10px rgba(255, 255, 255, 0.5)
-        );
-        font-size: 60px;
-        padding: 10px 40px;
+      /* ===== BODY ROW ===== */
+      .elim-body {
         display: flex;
         align-items: center;
-        gap: 20px;
-        flex-grow: 1;
-        font-weight: bold;
-        text-transform: uppercase;
+        background: linear-gradient(90deg, #0D0D0D 0%, #1A1A1A 50%, #0D0D0D 100%);
+        border-left: 3px solid #C89B3C;
+        border-right: 3px solid #C89B3C;
+        border-bottom: 3px solid #C89B3C;
+        clip-path: polygon(3% 0, 97% 0, 100% 100%, 0 100%);
+        padding: 0;
+        min-height: 100px;
+        gap: 0;
       }
 
-      .kill-part {
-        background-color: var(
-          --elimated-kill-background-color,
-          rgba(197, 219, 236, 0.855)
-        );
-        color: var(--elimated-kill-color, rgb(47, 47, 47));
-        text-shadow: var(
-          --elimated-kill-text-shadow,
-          0 0 10px rgba(8, 37, 71, 0.2)
-        );
-        font-size: 60px;
-        padding: 10px 40px;
-        font-weight: bold;
-        text-align: center;
+      /* --- Rank Block --- */
+      .elim-rank {
+        flex: 0 0 130px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(180deg, #C89B3C 0%, #8B6914 100%);
+        height: 100%;
+        min-height: 100px;
+        padding: 8px 10px;
+        box-sizing: border-box;
+        clip-path: polygon(0 0, 85% 0, 100% 100%, 0 100%);
       }
-      .kill-label {
-        font-size: 20px;
-        color: #555;
+      .elim-rank-label {
+        font-size: 14px;
+        letter-spacing: 3px;
+        color: #1A1A1A;
         text-transform: uppercase;
-        margin-top: -10px;
+        font-weight: bold;
+        margin-bottom: 2px;
+      }
+      .elim-rank-number {
+        font-size: 52px;
+        font-weight: bold;
+        color: #1A1A1A;
+        line-height: 1;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.4);
       }
 
-      .team-logo {
-        width: 60px;
-        height: 60px;
+      /* --- Team Block --- */
+      .elim-team {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        padding: 12px 20px 12px 24px;
+        gap: 18px;
+        overflow: hidden;
+      }
+      .elim-logo {
+        width: 65px;
+        height: 65px;
         object-fit: contain;
+        flex-shrink: 0;
+        filter: drop-shadow(0 0 8px rgba(200, 155, 60, 0.5));
+      }
+      .elim-team-name {
+        font-size: 54px;
+        font-weight: bold;
+        color: #FFFFFF;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-shadow: 0 0 12px rgba(255,255,255,0.3),
+                     0 2px 8px rgba(0,0,0,0.8);
+      }
+
+      /* --- Kills Block --- */
+      .elim-kills {
+        flex: 0 0 150px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 20px;
+        border-left: 2px solid rgba(200, 155, 60, 0.4);
+        gap: 4px;
+      }
+      .elim-kills-icon {
+        width: 32px;
+        height: 32px;
+        opacity: 0.9;
+      }
+      .elim-kills-count {
+        font-size: 58px;
+        font-weight: bold;
+        line-height: 1;
+        color: #F0C040;
+        text-shadow: 0 0 20px rgba(240, 192, 64, 0.7),
+                     0 2px 6px rgba(0,0,0,0.8);
+      }
+      .elim-kills-label {
+        font-size: 14px;
+        letter-spacing: 4px;
+        color: #888888;
+        text-transform: uppercase;
+      }
+
+      /* ===== GLOW LINE BOTTOM ===== */
+      .elim-glow-line {
+        height: 3px;
+        background: linear-gradient(90deg, transparent 0%, #C89B3C 30%, #F0C040 50%, #C89B3C 70%, transparent 100%);
+        box-shadow: 0 0 12px rgba(200, 155, 60, 0.8);
+        margin-top: -1px;
+        animation: glowPulse 2s ease-in-out infinite;
+      }
+      @keyframes glowPulse {
+        0%, 100% { opacity: 0.7; }
+        50% { opacity: 1; }
       }
     </style>
   </head>
   <body>
     <div id="container">
-      <div class="eliminated-box">
-        <div class="header">TEAM ELIMINATED</div>
-        <div class="info-row">
-          <div class="team-part">
-            <img
-              class="team-logo"
-              src="images/placeholder.png"
-              onerror="this.style.display = 'none'"
-            />
-            <span id="f_team_name">TEAM NAME</span>
+      <div class="eliminated-card">
+        <!-- Header -->
+        <div class="elim-header">
+          <div class="elim-header-text">Team Eliminated</div>
+        </div>
+
+        <!-- Body Row -->
+        <div class="elim-body">
+          <!-- Rank -->
+          <div class="elim-rank">
+            <div class="elim-rank-label">RANK</div>
+            <div class="elim-rank-number" id="f_rank">#–</div>
           </div>
-          <div class="kill-part">
-            <div id="f_kills">0</div>
-            <div class="kill-label">ELIMS</div>
+
+          <!-- Team -->
+          <div class="elim-team">
+            <img
+              class="elim-logo"
+              src="images/placeholder.png"
+              id="f_logo"
+              onerror="this.style.display='none'"
+            />
+            <span class="elim-team-name" id="f_team_name">TEAM NAME</span>
+          </div>
+
+          <!-- Kills -->
+          <div class="elim-kills">
+            <!-- Crosshair SVG icon -->
+            <svg class="elim-kills-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="16" cy="16" r="13" stroke="#C89B3C" stroke-width="2.5"/>
+              <circle cx="16" cy="16" r="5" stroke="#C89B3C" stroke-width="2"/>
+              <line x1="16" y1="0" x2="16" y2="8" stroke="#C89B3C" stroke-width="2.5"/>
+              <line x1="16" y1="24" x2="16" y2="32" stroke="#C89B3C" stroke-width="2.5"/>
+              <line x1="0" y1="16" x2="8" y2="16" stroke="#C89B3C" stroke-width="2.5"/>
+              <line x1="24" y1="16" x2="32" y2="16" stroke="#C89B3C" stroke-width="2.5"/>
+            </svg>
+            <div class="elim-kills-count" id="f_kills">0</div>
+            <div class="elim-kills-label">ELIMS</div>
           </div>
         </div>
+
+        <!-- Bottom Glow Line -->
+        <div class="elim-glow-line"></div>
       </div>
     </div>
 
@@ -176,6 +275,15 @@
           let trigger = state.eliminated_trigger;
           if (trigger.timestamp > lastElimTimestamp && trigger.team_name) {
             lastElimTimestamp = trigger.timestamp;
+            // Update rank if available
+            const rankEl = document.getElementById("f_rank");
+            if (rankEl && trigger.rank) rankEl.innerHTML = "#" + trigger.rank;
+            // Update team logo if available
+            const logoEl = document.getElementById("f_logo");
+            if (logoEl && trigger.team_id) {
+              logoEl.src = "team_logos/" + trigger.team_id + ".png";
+              logoEl.style.display = "";
+            }
             update({ f_team_name: trigger.team_name, f_kills: trigger.kills });
             play();
             // Auto-hide after 5 seconds
@@ -184,23 +292,46 @@
         }
       }
 
-      // Check existing state on load to prevent triggering old events
-      fetch("http://localhost:3000/api/state")
-        .then((r) => r.json())
-        .then((state) => {
-          if (state && state.eliminated_trigger) {
-            lastElimTimestamp = state.eliminated_trigger.timestamp;
-          }
-        })
-        .catch((e) => {});
+      // === DEMO / PREVIEW MODE ===
+      // Buka eliminated.html?demo=1 untuk preview di browser
+      (function () {
+        const _p = new URLSearchParams(window.location.search);
+        if (_p.get('demo') === '1') {
+          setTimeout(() => {
+            const r = document.getElementById('f_rank');
+            if (r) r.innerHTML = '#16';
+            const logo = document.getElementById('f_logo');
+            if (logo) logo.style.display = 'none';
+            update({ f_team_name: 'DEMO TEAM', f_kills: 7 });
+            play();
+          }, 600);
+          return; // skip server connection in demo mode
+        }
 
-      // Listen for real-time updates from Server
-      const evtSource = new EventSource("http://localhost:3000/api/stream");
-      evtSource.onmessage = (event) => {
-        try {
-          checkState(JSON.parse(event.data));
-        } catch (e) {}
-      };
+        // Keyboard shortcut testing: P = play, S = stop
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'p' || e.key === 'P') play();
+          if (e.key === 's' || e.key === 'S') stop();
+        });
+
+        // Check existing state on load to prevent triggering old events
+        fetch("http://localhost:3000/api/state")
+          .then((r) => r.json())
+          .then((state) => {
+            if (state && state.eliminated_trigger) {
+              lastElimTimestamp = state.eliminated_trigger.timestamp;
+            }
+          })
+          .catch((e) => {});
+
+        // Listen for real-time updates from Server
+        const evtSource = new EventSource("http://localhost:3000/api/stream");
+        evtSource.onmessage = (event) => {
+          try {
+            checkState(JSON.parse(event.data));
+          } catch (e) {}
+        };
+      })();
     </script>
   </body>
 </html>

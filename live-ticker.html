@@ -9,107 +9,229 @@
             font-family: 'AgencyFB';
             src: url('fonts/agency_fb.ttf') format('truetype');
         }
+
         body, html {
-            margin: 0; padding: 0; width: 1920px; height: 1080px; overflow: hidden;
-            font-family: 'AgencyFB', sans-serif; color: white; background: transparent;
+            margin: 0; padding: 0;
+            width: 1920px; height: 1080px;
+            overflow: hidden;
+            font-family: 'AgencyFB', sans-serif;
+            color: white;
+            background: transparent;
         }
 
+        /* ===== CONTAINER ===== */
         #container {
-            width: 1920px; height: 1080px; position: absolute; top: 0; left: 0;
-            opacity: 0; transition: opacity 0.5s ease-in-out;
+            width: 1920px; height: 1080px;
+            position: absolute; top: 0; left: 0;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
         }
         #container.show { opacity: 1; }
 
-        /* Scoreboard Panel */
+        /* ===== SCOREBOARD PANEL ===== */
         .scoreboard {
-            position: absolute; right: 50px; top: 50px; width: 500px;
-            background-color: var(--live-ticker-ranking-background-color, #3d69b5);
-            box-shadow: 0 0 20px rgba(0,0,0,0.7);
-            transform: translateX(600px); transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            position: absolute;
+            right: 40px;
+            top: 20px;
+            width: 440px;
+            max-height: calc(1080px - 40px);
+            overflow: hidden;
+            background: linear-gradient(180deg, #0D0D0D 0%, #121212 100%);
+            border: 2px solid #C89B3C;
+            box-shadow: 0 0 30px rgba(200, 155, 60, 0.35),
+                        inset 0 0 20px rgba(0, 0, 0, 0.6);
+            /* Slide-in from right */
+            transform: translateX(520px);
+            transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            overflow: hidden;
         }
         #container.show .scoreboard { transform: translateX(0); }
 
-        .header {
-            background-color: var(--liver-ticker-ranking-title-color, black); /* The CSS uses "liver" typo */
-            color: var(--live-ticker-ranking-header-color, white);
-            text-align: center; font-size: 35px; padding: 10px 0; font-weight: bold;
+        /* ===== HEADER ===== */
+        .panel-header {
+            background: linear-gradient(90deg, #8B6914 0%, #C89B3C 30%, #F0C040 50%, #C89B3C 70%, #8B6914 100%);
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .panel-header-title {
+            font-size: 28px;
+            font-weight: bold;
+            letter-spacing: 6px;
+            color: #1A1A1A;
+            text-transform: uppercase;
+            text-shadow: 0 1px 3px rgba(255,255,255,0.2);
+        }
+        .panel-header-badge {
+            font-size: 13px;
+            letter-spacing: 2px;
+            color: #1A1A1A;
+            font-weight: bold;
+            opacity: 0.7;
+            text-transform: uppercase;
         }
 
-        /* Table Structure */
-        .table-header {
-            display: flex; background-color: var(--live-ticker-ranking-header-background-color, black);
-            color: white; font-size: 24px; font-weight: bold; padding: 5px 10px;
+        /* ===== TABLE COLUMN HEADER ===== */
+        .table-col-header {
+            display: grid;
+            grid-template-columns: 44px 1fr 46px 70px 44px;
+            align-items: center;
+            background: #1A1A1A;
+            border-bottom: 1px solid rgba(200, 155, 60, 0.4);
+            padding: 5px 10px;
+            font-size: 13px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: #C89B3C;
+            text-transform: uppercase;
         }
-        .col-rank { width: 15%; text-align: center; }
-        .col-team { width: 35%; padding-left: 10px; }
-        .col-pts { width: 15%; text-align: center; }
-        .col-alive { width: 20%; text-align: center; }
-        .col-elims { width: 15%; text-align: center; }
 
+        /* ===== TEAM LIST ===== */
         .team-list { display: flex; flex-direction: column; }
+
         .team-row {
-            display: flex; align-items: center; font-size: 26px; padding: 5px 10px; font-weight: bold;
-            opacity: 0; transform: translateX(50px); transition: all 0.5s ease;
+            display: grid;
+            grid-template-columns: 44px 1fr 46px 70px 44px;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            padding: 5px 10px;
+            min-height: 44px;
+            /* Stagger slide-in */
+            opacity: 0;
+            transform: translateX(40px);
+            transition: opacity 0.45s ease, transform 0.45s ease;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
         }
         #container.show .team-row { opacity: 1; transform: translateX(0); }
 
-        .team-row:nth-child(odd) { background-color: var(--live-ticker-raking-uneven-background-color, rgba(34, 49, 91, 0.7)); }
-        .team-row:nth-child(even) { background-color: var(--live-ticker-ranking-even-background-color, rgba(39, 49, 63, 0.7)); }
-        
-        /* Alive Pills */
-        .alive-pills { display: flex; justify-content: center; gap: 4px; }
-        .pill { width: 12px; height: 25px; border-radius: 10px; }
-        .pill.W { background-color: var(--live-ticker-alive-background-color, #fff); }
-        .pill.D { background-color: var(--live-ticker-dead-background-color, #000); }
-        .pill.R { background-color: var(--live-ticker-knocked-background-color, #ff0000); }
-        
-        .miss-text {
-            color: #888; font-size: 22px; letter-spacing: 2px;
-        }
-        
-        .team-logo { width: 30px; height: 30px; object-fit: contain; margin-right: 10px; vertical-align: middle; }
-        .team-name-text { vertical-align: middle; }
-        .team-row.is-dead .team-logo { filter: grayscale(1); opacity: 0.45; }
-        .team-row.is-dead .team-name-text { color: #888; }
+        .team-row:nth-child(odd)  { background: rgba(26, 26, 26, 0.85); }
+        .team-row:nth-child(even) { background: rgba(20, 20, 20, 0.75); }
 
-        /* Staggered Animations */
-        .team-list .team-row:nth-child(1) { transition-delay: 0.1s; }
-        .team-list .team-row:nth-child(2) { transition-delay: 0.15s; }
-        .team-list .team-row:nth-child(3) { transition-delay: 0.2s; }
-        .team-list .team-row:nth-child(4) { transition-delay: 0.25s; }
-        .team-list .team-row:nth-child(5) { transition-delay: 0.3s; }
-        .team-list .team-row:nth-child(6) { transition-delay: 0.35s; }
-        .team-list .team-row:nth-child(7) { transition-delay: 0.4s; }
-        .team-list .team-row:nth-child(8) { transition-delay: 0.45s; }
-        .team-list .team-row:nth-child(9) { transition-delay: 0.5s; }
-        .team-list .team-row:nth-child(10) { transition-delay: 0.55s; }
-        .team-list .team-row:nth-child(11) { transition-delay: 0.6s; }
-        .team-list .team-row:nth-child(12) { transition-delay: 0.65s; }
-        .team-list .team-row:nth-child(13) { transition-delay: 0.7s; }
-        .team-list .team-row:nth-child(14) { transition-delay: 0.75s; }
-        .team-list .team-row:nth-child(15) { transition-delay: 0.8s; }
-        .team-list .team-row:nth-child(16) { transition-delay: 0.85s; }
-        .team-list .team-row:nth-child(17) { transition-delay: 0.9s; }
-        .team-list .team-row:nth-child(18) { transition-delay: 0.95s; }
-        .team-list .team-row:nth-child(19) { transition-delay: 1.0s; }
-        .team-list .team-row:nth-child(20) { transition-delay: 1.05s; }
+        /* Dead row styling */
+        .team-row.is-dead .col-team-inner { color: #555; }
+        .team-row.is-dead .team-logo { filter: grayscale(1); opacity: 0.35; }
+        .team-row.is-dead .col-rank-val { color: #444; }
+
+        /* ===== COLUMNS ===== */
+        .col-rank-val {
+            text-align: center;
+            font-size: 16px;
+            color: #C89B3C;
+            font-weight: bold;
+        }
+
+        .col-team-cell {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow: hidden;
+            padding-left: 4px;
+        }
+        .team-logo {
+            width: 26px; height: 26px;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+        .team-name-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 19px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .col-pts-val {
+            text-align: center;
+            font-size: 19px;
+            font-weight: bold;
+            color: #FFFFFF;
+        }
+
+        /* ===== ALIVE BARS ===== */
+        .col-alive-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+        }
+        .alive-bar {
+            width: 10px;
+            height: 22px;
+            border-radius: 3px;
+        }
+        .alive-bar.W { background: #3DBA4E; box-shadow: 0 0 5px rgba(61,186,78,0.7); }
+        .alive-bar.D { background: #2A2A2A; border: 1px solid #3A3A3A; }
+        .alive-bar.R { background: #E04040; box-shadow: 0 0 5px rgba(224,64,64,0.7); }
+
+        .miss-text {
+            color: #555;
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+
+        .col-elims-val {
+            text-align: center;
+            font-size: 19px;
+            font-weight: bold;
+            color: #F0C040;
+        }
+
+        /* ===== GOLD DIVIDER LINE ===== */
+        .gold-divider {
+            height: 2px;
+            background: linear-gradient(90deg, transparent 0%, #C89B3C 30%, #F0C040 50%, #C89B3C 70%, transparent 100%);
+            opacity: 0.6;
+        }
+
+        /* ===== STAGGERED ANIMATION DELAYS ===== */
+        .team-list .team-row:nth-child(1)  { transition-delay: 0.08s; }
+        .team-list .team-row:nth-child(2)  { transition-delay: 0.13s; }
+        .team-list .team-row:nth-child(3)  { transition-delay: 0.18s; }
+        .team-list .team-row:nth-child(4)  { transition-delay: 0.23s; }
+        .team-list .team-row:nth-child(5)  { transition-delay: 0.28s; }
+        .team-list .team-row:nth-child(6)  { transition-delay: 0.33s; }
+        .team-list .team-row:nth-child(7)  { transition-delay: 0.38s; }
+        .team-list .team-row:nth-child(8)  { transition-delay: 0.43s; }
+        .team-list .team-row:nth-child(9)  { transition-delay: 0.48s; }
+        .team-list .team-row:nth-child(10) { transition-delay: 0.53s; }
+        .team-list .team-row:nth-child(11) { transition-delay: 0.58s; }
+        .team-list .team-row:nth-child(12) { transition-delay: 0.63s; }
+        .team-list .team-row:nth-child(13) { transition-delay: 0.68s; }
+        .team-list .team-row:nth-child(14) { transition-delay: 0.73s; }
+        .team-list .team-row:nth-child(15) { transition-delay: 0.78s; }
+        .team-list .team-row:nth-child(16) { transition-delay: 0.83s; }
+        .team-list .team-row:nth-child(17) { transition-delay: 0.88s; }
+        .team-list .team-row:nth-child(18) { transition-delay: 0.93s; }
+        .team-list .team-row:nth-child(19) { transition-delay: 0.98s; }
+        .team-list .team-row:nth-child(20) { transition-delay: 1.03s; }
     </style>
 </head>
 <body>
 
 <div id="container">
     <div class="scoreboard">
-        <div class="header">LIVE RANKING</div>
-        <div class="table-header">
-            <div class="col-rank">RANK</div>
-            <div class="col-team">TEAM</div>
-            <div class="col-pts">PTS</div>
-            <div class="col-alive">ALIVE</div>
-            <div class="col-elims">ELIMS</div>
+        <!-- Header -->
+        <div class="panel-header">
+            <div class="panel-header-title">Live Ranking</div>
+            <div class="panel-header-badge">PIALA WALIKOTA</div>
         </div>
-        <div class="team-list" id="team-list">
-            <!-- Rows injected by JS -->
+        <div class="gold-divider"></div>
+
+        <!-- Column labels -->
+        <div class="table-col-header">
+            <div style="text-align:center">#</div>
+            <div style="padding-left:4px">TEAM</div>
+            <div style="text-align:center">PTS</div>
+            <div style="text-align:center">ALIVE</div>
+            <div style="text-align:center">ELIM</div>
         </div>
+
+        <!-- Rows injected by JS -->
+        <div class="team-list" id="team-list"></div>
     </div>
 </div>
 
@@ -120,16 +242,14 @@
         for (let i = 1; i <= 20; i++) {
             list.innerHTML += `
                 <div class="team-row" id="row_${i}">
-                    <div class="col-rank" id="f_rank_${i}">#${i}</div>
-                    <div class="col-team">
+                    <div class="col-rank-val" id="f_rank_${i}">#${i}</div>
+                    <div class="col-team-cell">
                         <img class="team-logo" src="images/placeholder.png" onerror="this.style.display='none'">
-                        <span class="team-name-text" id="f_team_${i}">Team ${i}</span>
+                        <span class="team-name-text col-team-inner" id="f_team_${i}">Team ${i}</span>
                     </div>
-                    <div class="col-pts" id="f_pts_${i}">0</div>
-                    <div class="col-alive" id="f_alive_container_${i}">
-                        <div class="alive-pills" id="f_alive_${i}"></div>
-                    </div>
-                    <div class="col-elims" id="f_elims_${i}">0</div>
+                    <div class="col-pts-val" id="f_pts_${i}">0</div>
+                    <div class="col-alive-cell" id="f_alive_${i}"></div>
+                    <div class="col-elims-val" id="f_elims_${i}">0</div>
                 </div>
             `;
         }
@@ -138,23 +258,22 @@
     function renderAlivePills(val, containerId) {
         let el = document.getElementById(containerId);
         if (!el) return;
-        
+
         val = String(val).toUpperCase().trim();
         if (val === 'MISS' || val === 'MISSED') {
             el.innerHTML = '<span class="miss-text">MISS</span>';
             return;
         }
 
-        let html = '<div class="alive-pills">';
+        let html = '';
         for (let i = 0; i < 4; i++) {
             let char = val.charAt(i) || 'D';
             if (char === 'W' || char === 'R' || char === 'D') {
-                html += `<div class="pill ${char}"></div>`;
+                html += `<div class="alive-bar ${char}"></div>`;
             } else {
-                html += `<div class="pill D"></div>`;
+                html += `<div class="alive-bar D"></div>`;
             }
         }
-        html += '</div>';
         el.innerHTML = html;
     }
 
@@ -167,7 +286,7 @@
             for (var key in data) {
                 var val = data[key];
                 if (val && typeof val === 'object' && val.v !== undefined) { val = val.v; }
-                
+
                 if (key.startsWith('f_alive_')) {
                     renderAlivePills(val, key);
                 } else {
@@ -179,7 +298,7 @@
     }
 
     generateRows();
-    
+
     function processState(state) {
         if(state && state.teams) {
             let newData = {};
@@ -187,14 +306,14 @@
                 let teamIndex = i + 1;
                 newData[`f_team_${teamIndex}`] = t.name;
                 newData[`f_elims_${teamIndex}`] = t.kills;
-                
+
                 let aliveStr = "";
                 if (t.status === "MISS" || t.alive === 0) aliveStr = "DDDD";
                 else if (t.alive === 4) aliveStr = "WWWW";
                 else if (t.alive === 3) aliveStr = "WWWD";
                 else if (t.alive === 2) aliveStr = "WWDD";
                 else if (t.alive === 1) aliveStr = "WDDD";
-                
+
                 newData[`f_alive_${teamIndex}`] = aliveStr;
                 const row = document.getElementById(`row_${teamIndex}`);
                 if (row) row.classList.toggle("is-dead", t.status === "DEAD" || t.alive === 0);
@@ -208,7 +327,7 @@
         .then(r => r.json())
         .then(state => processState(state))
         .catch(e => {});
-    
+
     // Always show ticker
     setTimeout(() => play(), 500);
 
