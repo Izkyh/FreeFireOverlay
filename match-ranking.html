@@ -203,7 +203,8 @@
         return {
           ...row,
           match: Math.max(1, toNumber(row.match, fallbackMatch)),
-          rank, kills,
+          rank, 
+          kills: row.kill_pts !== undefined ? toNumber(row.kill_pts, 0) : 0,
           wwcd: Math.max(0, toNumber(row.wwcd, rank === 1 ? 1 : 0)),
           place_pts, kill_pts, total,
         };
@@ -211,7 +212,8 @@
 
       function renderRows(rows) {
         const list = document.getElementById("team-list");
-        list.innerHTML = "";
+        if (!list) return;
+
         let lastMatch = null;
 
         const sorted = rows
@@ -221,25 +223,59 @@
         if (sorted.length > 0) {
           const maxMatch = Math.max(...sorted.map(r => r.match));
           const badge = document.getElementById("f_match_badge");
-          if (badge) badge.textContent = `FINALS · MATCH ${maxMatch}`;
+          if (badge && badge.textContent !== `FINALS · MATCH ${maxMatch}`) {
+            badge.textContent = `FINALS · MATCH ${maxMatch}`;
+          }
         }
 
-        sorted.forEach(team => {
+        while (list.children.length < sorted.length) {
+          const div = document.createElement("div");
+          div.className = "team-row";
+          div.innerHTML = `
+            <div class="c-match"></div>
+            <div class="c-rank"></div>
+            <div class="c-team">
+              <img class="team-logo" src="" onerror="this.style.display='none'">
+              <span class="team-name-text"></span>
+            </div>
+            <div class="c-elims"></div>
+            <div class="c-rpts"></div>
+            <div class="c-total"></div>
+          `;
+          list.appendChild(div);
+        }
+        while (list.children.length > sorted.length) {
+          list.removeChild(list.lastChild);
+        }
+
+        sorted.forEach((team, i) => {
+          const row = list.children[i];
           const isMatchStart = lastMatch !== null && lastMatch !== team.match;
           lastMatch = team.match;
           const isFirst = team.rank === 1;
-          list.innerHTML += `
-            <div class="team-row ${isMatchStart ? 'match-start' : ''} ${isFirst ? 'rank-first' : ''}">
-              <div class="c-match">M${team.match}</div>
-              <div class="c-rank">#${team.rank}</div>
-              <div class="c-team">
-                <img class="team-logo" src="team_logos/${team.id}.png" onerror="this.style.display='none'">
-                <span class="team-name-text">${team.name}</span>
-              </div>
-              <div class="c-elims">${team.kills}</div>
-              <div class="c-rpts">${team.place_pts}</div>
-              <div class="c-total">${team.total}</div>
-            </div>`;
+
+          const newClass = `team-row ${isMatchStart ? 'match-start' : ''} ${isFirst ? 'rank-first' : ''}`;
+          if (row.className !== newClass) row.className = newClass;
+
+          function setCellText(idx, val) {
+            const el = row.children[idx];
+            if (el && el.textContent !== String(val)) el.textContent = val;
+          }
+
+          setCellText(0, `M${team.match}`);
+          setCellText(1, `#${team.rank}`);
+
+          const teamCell = row.children[2];
+          const img = teamCell.querySelector('.team-logo');
+          const imgSrc = `team_logos/${team.id}.png`;
+          if (img && !img.src.endsWith(imgSrc)) img.src = imgSrc;
+
+          const nameSpan = teamCell.querySelector('.team-name-text');
+          if (nameSpan && nameSpan.textContent !== team.name) nameSpan.textContent = team.name;
+
+          setCellText(3, team.kills); // ELIMS (menggunakan nilai kill_pts dari db)
+          setCellText(4, team.place_pts);
+          setCellText(5, team.total);
         });
       }
 
@@ -247,40 +283,107 @@
         const rows = [...teams]
           .filter(t => t.status !== "MISS")
           .map(team => normalizeResult({ ...team, match: 1 }))
-          .sort((a, b) =>
-            b.total - a.total || b.wwcd - a.wwcd ||
-            b.kills - a.kills || a.rank - b.rank
-          )
-          .map((team, index) => ({ ...team, rank: index + 1 }));
+          .sort((a, b) => a.rank - b.rank);
         renderRows(rows);
       }
 
       function play() { document.getElementById("container").classList.add("show"); }
 
       function processState(state) {
-        if (state && Array.isArray(state.postmatch) && state.postmatch.length) {
-          renderRows(state.postmatch); return;
+        const urlParams = new URLSearchParams(window.location.search);
+        const matchParam = urlParams.get('match') || "LIVE"; // LIVE is default
+
+        let rowsToRender = [];
+
+        if (matchParam.toUpperCase() === "LIVE") {
+            rowsToRender = state.postmatch || [];
+            console.log("[MATCH_RANKING] Loading LIVE data");
+            console.log("[MATCH_RANKING] Rows:", rowsToRender.length);
+            console.log("[MATCH_RANKING] Teams:", rowsToRender.length);
+        } else {
+            const selectedMatch = matchParam.match(/\d+/) ? matchParam.match(/\d+/)[0] : matchParam;
+            if (state.match_history && Array.isArray(state.match_history)) {
+                rowsToRender = state.match_history.filter(t => String(t.match) === String(selectedMatch));
+            }
+            console.log("[MATCH_HISTORY] Selected Match:", selectedMatch);
+            console.log("[MATCH_HISTORY] Rows:", rowsToRender.length);
         }
-        if (state && Array.isArray(state.teams) && state.teams.length) {
-          renderCurrentMatch(state.teams);
+
+        if (rowsToRender.length > 0) {
+            renderRows(rowsToRender);
+        } else {
+            console.warn("No ranking data available");
         }
       }
 
-      fetch("http://localhost:3000/api/state")
-        .then(r => r.json())
-        .then(state => processState(state))
-        .catch(() => {
-          const dummy = [];
-          for (let i = 1; i <= 16; i++) {
-            dummy.push({ match: 1, id: i, name: "TEAM " + i, kills: 16 - i, rank: i, wwcd: i === 1 ? 1 : 0 });
-          }
-          renderRows(dummy);
-        });
+// ==============================================================================
+// INTEGRASI GOOGLE APPS SCRIPT BACKEND (AUTO-POLLING)
+// ==============================================================================
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwZ15aIzh3YXL2BC0BGEcnlikWG2T40WPVUPRHD_Vl3GtPUmPJvnU4ayrVSlokvs--l/exec";
 
-      const evtSource = new EventSource("http://localhost:3000/api/stream");
-      evtSource.onmessage = (event) => {
-        try { processState(JSON.parse(event.data)); } catch(e) {}
-      };
+let previousMatchState = [];
+let isFetching = false;
+
+function fetchFromGoogleSheets() {
+    if (isFetching) return;
+    isFetching = true;
+
+    fetch(GAS_URL)
+        .then(response => response.json())
+        .then(data => {
+            let state = {};
+            
+            // 1. Deteksi jika halaman ini adalah OVERALL RANKING
+            if (document.getElementById("f_overall_title")) {
+                state.teams = data.overall_ranking;
+                if(typeof processState === "function") processState(state);
+            } 
+            
+            // 2. Deteksi jika halaman ini adalah ELIMINATED OVERLAY
+            else if (document.querySelector(".eliminated-card")) {
+                const currentMatch = data.match_ranking;
+                
+                // Deteksi tim yang baru saja "Mati" (Rata Lobi)
+                if (previousMatchState.length > 0) {
+                    currentMatch.forEach(team => {
+                        const prevTeam = previousMatchState.find(p => p.name === team.name);
+                        // Jika sebelumnya Alive (angkanya > 0) dan sekarang Alive menjadi 0
+                        if (prevTeam && prevTeam.alive > 0 && team.alive === 0) {
+                            state.eliminated_trigger = {
+                                timestamp: Date.now(),
+                                team_name: team.name,
+                                team_id: team.id,
+                                kills: team.kills,
+                                rank: team.rank // Menangkap rank yang dikirim dari backend
+                            };
+                            if(typeof checkState === "function") checkState(state);
+                        }
+                    });
+                }
+                previousMatchState = currentMatch;
+            } 
+            
+            // 3. Deteksi jika halaman ini adalah LIVE TICKER atau MATCH RANKING
+            else {
+                state.postmatch = data.postmatch;
+                state.match_history = data.match_history;
+                state.teams = data.match_ranking;
+                if(typeof processState === "function") processState(state);
+            }
+            
+            isFetching = false;
+        })
+        .catch(err => {
+            console.error("Failed to load MATCH_RANKING:", err);
+            isFetching = false;
+        });
+}
+
+// Jalankan pengambilan data pertama kali saat halaman dimuat
+fetchFromGoogleSheets();
+
+// Lakukan Polling (Tarik Data) setiap 3 detik
+setInterval(fetchFromGoogleSheets, 3000);
 
       setTimeout(() => play(), 500);
     </script>

@@ -448,34 +448,131 @@
           b.total - a.total ||
           (b.wwcd || 0) - (a.wwcd || 0) ||
           b.kill_pts - a.kill_pts
-        )
-        .slice(0, 16);
+        );
 
       const list = document.getElementById("team-list");
-      list.innerHTML = "";
-      sorted.forEach((t, i) => { list.innerHTML += buildRow(t, i + 1); });
+      if (!list) return;
+
+      while (list.children.length < sorted.length) {
+        const div = document.createElement("div");
+        div.className = "team-row";
+        div.innerHTML = `
+            <div class="r-rank"></div>
+            <div class="r-team">
+              <img class="team-logo" src="" onerror="this.style.display='none'">
+              <span class="team-name-text"></span>
+            </div>
+            <div class="r-plc"></div>
+            <div class="r-kp"></div>
+            <div class="r-total"></div>
+        `;
+        list.appendChild(div);
+      }
+      while (list.children.length > sorted.length) {
+        list.removeChild(list.lastChild);
+      }
+
+      sorted.forEach((t, i) => {
+        const row = list.children[i];
+        const pos = i + 1;
+        
+        const plc = t.place_pts !== undefined ? t.place_pts : 0;
+        const kp = t.kill_pts !== undefined ? t.kill_pts : 0;
+        const tot = t.total !== undefined ? t.total : 0;
+
+        function setCellText(idx, val) {
+          const el = row.children[idx];
+          if (el && el.textContent !== String(val)) el.textContent = val;
+        }
+
+        setCellText(0, `#${pos}`);
+        
+        const teamCell = row.children[1];
+        const img = teamCell.querySelector('.team-logo');
+        const imgSrc = `team_logos/${t.id || pos}.png`;
+        if (img && !img.src.endsWith(imgSrc)) img.src = imgSrc;
+        
+        const nameSpan = teamCell.querySelector('.team-name-text');
+        const nameVal = t.name || ('TEAM ' + pos);
+        if (nameSpan && nameSpan.textContent !== nameVal) nameSpan.textContent = nameVal;
+
+        setCellText(2, plc);
+        setCellText(3, kp);
+        setCellText(4, tot);
+      });
     }
 
-    // Placeholder rows on load
-    (function () {
-      const list = document.getElementById("team-list");
-      list.innerHTML = "";
-      for (let i = 1; i <= 16; i++) {
-        list.innerHTML += buildRow({ id: i, name: "TEAM " + i, place_pts: 0, kill_pts: 0, total: 0 }, i);
-      }
-    })();
+    // Placeholder logic removed to avoid DOM conflicts
 
     setTimeout(() => play(), 500);
 
-    fetch("http://localhost:3000/api/state")
-      .then(r => r.json())
-      .then(state => processState(state))
-      .catch(() => { });
+// ==============================================================================
+// INTEGRASI GOOGLE APPS SCRIPT BACKEND (AUTO-POLLING)
+// ==============================================================================
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwZ15aIzh3YXL2BC0BGEcnlikWG2T40WPVUPRHD_Vl3GtPUmPJvnU4ayrVSlokvs--l/exec";
 
-    const evtSource = new EventSource("http://localhost:3000/api/stream");
-    evtSource.onmessage = (event) => {
-      try { processState(JSON.parse(event.data)); } catch (e) { }
-    };
+let previousMatchState = [];
+let isFetching = false;
+
+function fetchFromGoogleSheets() {
+    if (isFetching) return;
+    isFetching = true;
+
+    fetch(GAS_URL)
+        .then(response => response.json())
+        .then(data => {
+            let state = {};
+            
+            // 1. Deteksi jika halaman ini adalah OVERALL RANKING
+            if (document.getElementById("f_overall_title")) {
+                state.teams = data.overall_ranking;
+                if(typeof processState === "function") processState(state);
+            } 
+            
+            // 2. Deteksi jika halaman ini adalah ELIMINATED OVERLAY
+            else if (document.querySelector(".eliminated-card")) {
+                const currentMatch = data.match_ranking;
+                
+                // Deteksi tim yang baru saja "Mati" (Rata Lobi)
+                if (previousMatchState.length > 0) {
+                    currentMatch.forEach(team => {
+                        const prevTeam = previousMatchState.find(p => p.name === team.name);
+                        // Jika sebelumnya Alive (angkanya > 0) dan sekarang Alive menjadi 0
+                        if (prevTeam && prevTeam.alive > 0 && team.alive === 0) {
+                            state.eliminated_trigger = {
+                                timestamp: Date.now(),
+                                team_name: team.name,
+                                team_id: team.id,
+                                kills: team.kills,
+                                rank: team.rank // Menangkap rank yang dikirim dari backend
+                            };
+                            if(typeof checkState === "function") checkState(state);
+                        }
+                    });
+                }
+                previousMatchState = currentMatch;
+            } 
+            
+            // 3. Deteksi jika halaman ini adalah LIVE TICKER atau MATCH RANKING
+            else {
+                state.postmatch = data.postmatch;
+                state.teams = data.match_ranking;
+                if(typeof processState === "function") processState(state);
+            }
+            
+            isFetching = false;
+        })
+        .catch(err => {
+            console.error("Gagal mengambil data dari Google Sheets:", err);
+            isFetching = false;
+        });
+}
+
+// Jalankan pengambilan data pertama kali saat halaman dimuat
+fetchFromGoogleSheets();
+
+// Lakukan Polling (Tarik Data) setiap 2 detik
+setInterval(fetchFromGoogleSheets, 2000);
   </script>
 </body>
 

@@ -1,337 +1,413 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Eliminated Overlay</title>
-    <link rel="stylesheet" href="css/standard.css" />
-    <style>
-      @font-face {
-        font-family: "AgencyFB";
-        src: url("fonts/agency_fb.ttf") format("truetype");
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Eliminated Overlay</title>
+  <link rel="stylesheet" href="css/standard.css" />
+  <style>
+    @font-face {
+      font-family: "AgencyFB";
+      src: url("fonts/agency_fb.ttf") format("truetype");
+    }
+
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      font-family: "AgencyFB", sans-serif;
+      background: transparent;
+    }
+
+    /* ===== CONTAINER ===== */
+    #container {
+      width: 1920px;
+      height: 1080px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      padding-bottom: 100px;
+      box-sizing: border-box;
+    }
+
+    /* ===== MAIN CARD ===== */
+    .eliminated-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      width: 860px;
+      /* Slide-up animation */
+      transform: translateY(250px) scale(0.88);
+      opacity: 0;
+      transition: transform 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+        opacity 0.45s ease;
+      filter: drop-shadow(0 0 30px rgba(200, 155, 60, 0.55));
+    }
+
+    #container.show .eliminated-card {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+
+    /* ===== HEADER BAND ===== */
+    .elim-header {
+      position: relative;
+      background: linear-gradient(90deg, #8B1010 0%, #B01818 40%, #8B1010 100%);
+      padding: 10px 50px;
+      text-align: center;
+      border-top: 3px solid #C89B3C;
+      border-left: 3px solid #C89B3C;
+      border-right: 3px solid #C89B3C;
+      clip-path: polygon(0 0, 100% 0, 97% 100%, 3% 100%);
+      z-index: 2;
+    }
+
+    .elim-header-text {
+      font-size: 36px;
+      font-weight: bold;
+      letter-spacing: 12px;
+      text-transform: uppercase;
+      color: #FFFFFF;
+      text-shadow: 0 0 18px rgba(200, 155, 60, 0.8),
+        0 2px 6px rgba(0, 0, 0, 0.9);
+    }
+
+    /* ===== BODY ROW ===== */
+    .elim-body {
+      display: flex;
+      align-items: center;
+      background: linear-gradient(90deg, #0D0D0D 0%, #1A1A1A 50%, #0D0D0D 100%);
+      border-left: 3px solid #C89B3C;
+      border-right: 3px solid #C89B3C;
+      border-bottom: 3px solid #C89B3C;
+      clip-path: polygon(3% 0, 97% 0, 100% 100%, 0 100%);
+      padding: 0;
+      min-height: 100px;
+      gap: 0;
+    }
+
+    /* --- Rank Block --- */
+    .elim-rank {
+      flex: 0 0 130px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, #C89B3C 0%, #8B6914 100%);
+      height: 100%;
+      min-height: 100px;
+      padding: 8px 10px;
+      box-sizing: border-box;
+      clip-path: polygon(0 0, 85% 0, 100% 100%, 0 100%);
+    }
+
+    .elim-rank-label {
+      font-size: 14px;
+      letter-spacing: 3px;
+      color: #1A1A1A;
+      text-transform: uppercase;
+      font-weight: bold;
+      margin-bottom: 2px;
+    }
+
+    .elim-rank-number {
+      font-size: 52px;
+      font-weight: bold;
+      color: #1A1A1A;
+      line-height: 1;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    }
+
+    /* --- Team Block --- */
+    .elim-team {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      padding: 12px 20px 12px 24px;
+      gap: 18px;
+      overflow: hidden;
+    }
+
+    .elim-logo {
+      width: 65px;
+      height: 65px;
+      object-fit: contain;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 8px rgba(200, 155, 60, 0.5));
+    }
+
+    .elim-team-name {
+      font-size: 54px;
+      font-weight: bold;
+      color: #FFFFFF;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-shadow: 0 0 12px rgba(255, 255, 255, 0.3),
+        0 2px 8px rgba(0, 0, 0, 0.8);
+    }
+
+    /* --- Kills Block --- */
+    .elim-kills {
+      flex: 0 0 150px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 20px;
+      border-left: 2px solid rgba(200, 155, 60, 0.4);
+      gap: 4px;
+    }
+
+    .elim-kills-icon {
+      width: 32px;
+      height: 32px;
+      opacity: 0.9;
+    }
+
+    .elim-kills-count {
+      font-size: 58px;
+      font-weight: bold;
+      line-height: 1;
+      color: #F0C040;
+      text-shadow: 0 0 20px rgba(240, 192, 64, 0.7),
+        0 2px 6px rgba(0, 0, 0, 0.8);
+    }
+
+    .elim-kills-label {
+      font-size: 14px;
+      letter-spacing: 4px;
+      color: #888888;
+      text-transform: uppercase;
+    }
+
+    /* ===== GLOW LINE BOTTOM ===== */
+    .elim-glow-line {
+      height: 3px;
+      background: linear-gradient(90deg, transparent 0%, #C89B3C 30%, #F0C040 50%, #C89B3C 70%, transparent 100%);
+      box-shadow: 0 0 12px rgba(200, 155, 60, 0.8);
+      margin-top: -1px;
+      animation: glowPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes glowPulse {
+
+      0%,
+      100% {
+        opacity: 0.7;
       }
 
-      body,
-      html {
-        margin: 0;
-        padding: 0;
-        width: 1920px;
-        height: 1080px;
-        overflow: hidden;
-        font-family: "AgencyFB", sans-serif;
-        background: transparent;
-      }
-
-      /* ===== CONTAINER ===== */
-      #container {
-        width: 1920px;
-        height: 1080px;
-        position: absolute;
-        top: 0;
-        left: 0;
-        display: flex;
-        justify-content: center;
-        align-items: flex-end;
-        padding-bottom: 100px;
-        box-sizing: border-box;
-      }
-
-      /* ===== MAIN CARD ===== */
-      .eliminated-card {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        width: 860px;
-        /* Slide-up animation */
-        transform: translateY(250px) scale(0.88);
-        opacity: 0;
-        transition: transform 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275),
-                    opacity 0.45s ease;
-        filter: drop-shadow(0 0 30px rgba(200, 155, 60, 0.55));
-      }
-      #container.show .eliminated-card {
-        transform: translateY(0) scale(1);
+      50% {
         opacity: 1;
       }
+    }
+  </style>
+</head>
 
-      /* ===== HEADER BAND ===== */
-      .elim-header {
-        position: relative;
-        background: linear-gradient(90deg, #8B1010 0%, #B01818 40%, #8B1010 100%);
-        padding: 10px 50px;
-        text-align: center;
-        border-top: 3px solid #C89B3C;
-        border-left: 3px solid #C89B3C;
-        border-right: 3px solid #C89B3C;
-        clip-path: polygon(0 0, 100% 0, 97% 100%, 3% 100%);
-        z-index: 2;
-      }
-      .elim-header-text {
-        font-size: 36px;
-        font-weight: bold;
-        letter-spacing: 12px;
-        text-transform: uppercase;
-        color: #FFFFFF;
-        text-shadow: 0 0 18px rgba(200, 155, 60, 0.8),
-                     0 2px 6px rgba(0, 0, 0, 0.9);
-      }
-
-      /* ===== BODY ROW ===== */
-      .elim-body {
-        display: flex;
-        align-items: center;
-        background: linear-gradient(90deg, #0D0D0D 0%, #1A1A1A 50%, #0D0D0D 100%);
-        border-left: 3px solid #C89B3C;
-        border-right: 3px solid #C89B3C;
-        border-bottom: 3px solid #C89B3C;
-        clip-path: polygon(3% 0, 97% 0, 100% 100%, 0 100%);
-        padding: 0;
-        min-height: 100px;
-        gap: 0;
-      }
-
-      /* --- Rank Block --- */
-      .elim-rank {
-        flex: 0 0 130px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(180deg, #C89B3C 0%, #8B6914 100%);
-        height: 100%;
-        min-height: 100px;
-        padding: 8px 10px;
-        box-sizing: border-box;
-        clip-path: polygon(0 0, 85% 0, 100% 100%, 0 100%);
-      }
-      .elim-rank-label {
-        font-size: 14px;
-        letter-spacing: 3px;
-        color: #1A1A1A;
-        text-transform: uppercase;
-        font-weight: bold;
-        margin-bottom: 2px;
-      }
-      .elim-rank-number {
-        font-size: 52px;
-        font-weight: bold;
-        color: #1A1A1A;
-        line-height: 1;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.4);
-      }
-
-      /* --- Team Block --- */
-      .elim-team {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        padding: 12px 20px 12px 24px;
-        gap: 18px;
-        overflow: hidden;
-      }
-      .elim-logo {
-        width: 65px;
-        height: 65px;
-        object-fit: contain;
-        flex-shrink: 0;
-        filter: drop-shadow(0 0 8px rgba(200, 155, 60, 0.5));
-      }
-      .elim-team-name {
-        font-size: 54px;
-        font-weight: bold;
-        color: #FFFFFF;
-        text-transform: uppercase;
-        letter-spacing: 3px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        text-shadow: 0 0 12px rgba(255,255,255,0.3),
-                     0 2px 8px rgba(0,0,0,0.8);
-      }
-
-      /* --- Kills Block --- */
-      .elim-kills {
-        flex: 0 0 150px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 8px 20px;
-        border-left: 2px solid rgba(200, 155, 60, 0.4);
-        gap: 4px;
-      }
-      .elim-kills-icon {
-        width: 32px;
-        height: 32px;
-        opacity: 0.9;
-      }
-      .elim-kills-count {
-        font-size: 58px;
-        font-weight: bold;
-        line-height: 1;
-        color: #F0C040;
-        text-shadow: 0 0 20px rgba(240, 192, 64, 0.7),
-                     0 2px 6px rgba(0,0,0,0.8);
-      }
-      .elim-kills-label {
-        font-size: 14px;
-        letter-spacing: 4px;
-        color: #888888;
-        text-transform: uppercase;
-      }
-
-      /* ===== GLOW LINE BOTTOM ===== */
-      .elim-glow-line {
-        height: 3px;
-        background: linear-gradient(90deg, transparent 0%, #C89B3C 30%, #F0C040 50%, #C89B3C 70%, transparent 100%);
-        box-shadow: 0 0 12px rgba(200, 155, 60, 0.8);
-        margin-top: -1px;
-        animation: glowPulse 2s ease-in-out infinite;
-      }
-      @keyframes glowPulse {
-        0%, 100% { opacity: 0.7; }
-        50% { opacity: 1; }
-      }
-    </style>
-  </head>
-  <body>
-    <div id="container">
-      <div class="eliminated-card">
-        <!-- Header -->
-        <div class="elim-header">
-          <div class="elim-header-text">Team Eliminated</div>
-        </div>
-
-        <!-- Body Row -->
-        <div class="elim-body">
-          <!-- Rank -->
-          <div class="elim-rank">
-            <div class="elim-rank-label">RANK</div>
-            <div class="elim-rank-number" id="f_rank">#–</div>
-          </div>
-
-          <!-- Team -->
-          <div class="elim-team">
-            <img
-              class="elim-logo"
-              src="images/placeholder.png"
-              id="f_logo"
-              onerror="this.style.display='none'"
-            />
-            <span class="elim-team-name" id="f_team_name">TEAM NAME</span>
-          </div>
-
-          <!-- Kills -->
-          <div class="elim-kills">
-            <!-- Crosshair SVG icon -->
-            <svg class="elim-kills-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="16" cy="16" r="13" stroke="#C89B3C" stroke-width="2.5"/>
-              <circle cx="16" cy="16" r="5" stroke="#C89B3C" stroke-width="2"/>
-              <line x1="16" y1="0" x2="16" y2="8" stroke="#C89B3C" stroke-width="2.5"/>
-              <line x1="16" y1="24" x2="16" y2="32" stroke="#C89B3C" stroke-width="2.5"/>
-              <line x1="0" y1="16" x2="8" y2="16" stroke="#C89B3C" stroke-width="2.5"/>
-              <line x1="24" y1="16" x2="32" y2="16" stroke="#C89B3C" stroke-width="2.5"/>
-            </svg>
-            <div class="elim-kills-count" id="f_kills">0</div>
-            <div class="elim-kills-label">ELIMS</div>
-          </div>
-        </div>
-
-        <!-- Bottom Glow Line -->
-        <div class="elim-glow-line"></div>
+<body>
+  <div id="container">
+    <div class="eliminated-card">
+      <!-- Header -->
+      <div class="elim-header">
+        <div class="elim-header-text">Team Eliminated</div>
       </div>
+
+      <!-- Body Row -->
+      <div class="elim-body">
+        <!-- Rank -->
+        <div class="elim-rank">
+          <div class="elim-rank-label">RANK</div>
+          <div class="elim-rank-number" id="f_rank">#–</div>
+        </div>
+
+        <!-- Team -->
+        <div class="elim-team">
+          <img class="elim-logo" src="images/placeholder.png" id="f_logo" onerror="this.style.display='none'" />
+          <span class="elim-team-name" id="f_team_name">TEAM NAME</span>
+        </div>
+
+        <!-- Kills -->
+        <div class="elim-kills">
+          <!-- Crosshair SVG icon -->
+          <svg class="elim-kills-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="16" cy="16" r="13" stroke="#C89B3C" stroke-width="2.5" />
+            <circle cx="16" cy="16" r="5" stroke="#C89B3C" stroke-width="2" />
+            <line x1="16" y1="0" x2="16" y2="8" stroke="#C89B3C" stroke-width="2.5" />
+            <line x1="16" y1="24" x2="16" y2="32" stroke="#C89B3C" stroke-width="2.5" />
+            <line x1="0" y1="16" x2="8" y2="16" stroke="#C89B3C" stroke-width="2.5" />
+            <line x1="24" y1="16" x2="32" y2="16" stroke="#C89B3C" stroke-width="2.5" />
+          </svg>
+          <div class="elim-kills-count" id="f_kills">0</div>
+          <div class="elim-kills-label">ELIMS</div>
+        </div>
+      </div>
+
+      <!-- Bottom Glow Line -->
+      <div class="elim-glow-line"></div>
     </div>
+  </div>
 
-    <script>
-      function play() {
-        document.getElementById("container").classList.add("show");
-      }
-      function stop() {
-        document.getElementById("container").classList.remove("show");
-      }
+  <script>
+    function play() {
+      document.getElementById("container").classList.add("show");
+    }
+    function stop() {
+      document.getElementById("container").classList.remove("show");
+    }
 
-      function update(str) {
-        try {
-          var data = typeof str === "string" ? JSON.parse(str) : str;
-          for (var key in data) {
-            var val = data[key];
-            if (val && typeof val === "object" && val.v !== undefined) {
-              val = val.v;
-            }
-            var el = document.getElementById(key);
-            if (el) {
-              el.innerHTML = val;
-            }
+    function update(str) {
+      try {
+        var data = typeof str === "string" ? JSON.parse(str) : str;
+        for (var key in data) {
+          var val = data[key];
+          if (val && typeof val === "object" && val.v !== undefined) {
+            val = val.v;
           }
-        } catch (e) {
-          console.error("Update Error: ", e);
-        }
-      }
-
-      let lastElimTimestamp = 0;
-
-      function checkState(state) {
-        if (state && state.eliminated_trigger) {
-          let trigger = state.eliminated_trigger;
-          if (trigger.timestamp > lastElimTimestamp && trigger.team_name) {
-            lastElimTimestamp = trigger.timestamp;
-            // Update rank if available
-            const rankEl = document.getElementById("f_rank");
-            if (rankEl && trigger.rank) rankEl.innerHTML = "#" + trigger.rank;
-            // Update team logo if available
-            const logoEl = document.getElementById("f_logo");
-            if (logoEl && trigger.team_id) {
-              logoEl.src = "team_logos/" + trigger.team_id + ".png";
-              logoEl.style.display = "";
-            }
-            update({ f_team_name: trigger.team_name, f_kills: trigger.kills });
-            play();
-            // Auto-hide after 5 seconds
-            setTimeout(() => stop(), 5000);
+          var el = document.getElementById(key);
+          if (el) {
+            el.innerHTML = val;
           }
         }
+      } catch (e) {
+        console.error("Update Error: ", e);
+      }
+    }
+
+    let lastElimTimestamp = 0;
+
+    function checkState(state) {
+      if (state && state.eliminated_trigger) {
+        let trigger = state.eliminated_trigger;
+        if (trigger.timestamp > lastElimTimestamp && trigger.team_name) {
+          lastElimTimestamp = trigger.timestamp;
+          // Update rank if available
+          const rankEl = document.getElementById("f_rank");
+          if (rankEl && trigger.rank) rankEl.innerHTML = "#" + trigger.rank;
+          // Update team logo if available
+          const logoEl = document.getElementById("f_logo");
+          if (logoEl && trigger.team_id) {
+            logoEl.src = "team_logos/" + trigger.team_id + ".png";
+            logoEl.style.display = "";
+          }
+          update({ f_team_name: trigger.team_name, f_kills: trigger.kills });
+          play();
+          // Auto-hide after 5 seconds
+          setTimeout(() => stop(), 5000);
+        }
+      }
+    }
+
+    // === DEMO / PREVIEW MODE ===
+    // Buka eliminated.html?demo=1 untuk preview di browser
+    (function () {
+      const _p = new URLSearchParams(window.location.search);
+      if (_p.get('demo') === '1') {
+        setTimeout(() => {
+          const r = document.getElementById('f_rank');
+          if (r) r.innerHTML = '#16';
+          const logo = document.getElementById('f_logo');
+          if (logo) logo.style.display = 'none';
+          update({ f_team_name: 'DEMO TEAM', f_kills: 7 });
+          play();
+        }, 600);
+        return; // skip server connection in demo mode
       }
 
-      // === DEMO / PREVIEW MODE ===
-      // Buka eliminated.html?demo=1 untuk preview di browser
-      (function () {
-        const _p = new URLSearchParams(window.location.search);
-        if (_p.get('demo') === '1') {
-          setTimeout(() => {
-            const r = document.getElementById('f_rank');
-            if (r) r.innerHTML = '#16';
-            const logo = document.getElementById('f_logo');
-            if (logo) logo.style.display = 'none';
-            update({ f_team_name: 'DEMO TEAM', f_kills: 7 });
-            play();
-          }, 600);
-          return; // skip server connection in demo mode
-        }
+      // Keyboard shortcut testing: P = play, S = stop
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'p' || e.key === 'P') play();
+        if (e.key === 's' || e.key === 'S') stop();
+      });
 
-        // Keyboard shortcut testing: P = play, S = stop
-        document.addEventListener('keydown', (e) => {
-          if (e.key === 'p' || e.key === 'P') play();
-          if (e.key === 's' || e.key === 'S') stop();
-        });
+      // ==============================================================================
+      // INTEGRASI GOOGLE APPS SCRIPT BACKEND (AUTO-POLLING)
+      // ==============================================================================
+      const GAS_URL = "https://script.google.com/macros/s/AKfycbwZ15aIzh3YXL2BC0BGEcnlikWG2T40WPVUPRHD_Vl3GtPUmPJvnU4ayrVSlokvs--l/exec";
 
-        // Check existing state on load to prevent triggering old events
-        fetch("http://localhost:3000/api/state")
-          .then((r) => r.json())
-          .then((state) => {
-            if (state && state.eliminated_trigger) {
-              lastElimTimestamp = state.eliminated_trigger.timestamp;
+      let previousMatchState = [];
+      let isFetching = false;
+
+      function fetchFromGoogleSheets() {
+        if (isFetching) return;
+        isFetching = true;
+
+        fetch(GAS_URL)
+          .then(response => response.json())
+          .then(data => {
+            let state = {};
+
+            // 1. Deteksi jika halaman ini adalah OVERALL RANKING
+            if (document.getElementById("f_overall_title")) {
+              state.teams = data.overall_ranking;
+              if (typeof processState === "function") processState(state);
             }
+
+            // 2. Deteksi jika halaman ini adalah ELIMINATED OVERLAY
+            else if (document.querySelector(".eliminated-card")) {
+              const currentMatch = data.match_ranking;
+              
+              // Deteksi tim yang baru saja "Mati" (Rata Lobi)
+              if (previousMatchState.length > 0) {
+                currentMatch.forEach(team => {
+                  const prevTeam = previousMatchState.find(p => p.name === team.name);
+                  // Jika sebelumnya Alive (angkanya > 0) dan sekarang Alive menjadi 0
+                  if (prevTeam && prevTeam.alive > 0 && team.alive === 0) {
+                    state.eliminated_trigger = {
+                      timestamp: Date.now(),
+                      team_name: team.name,
+                      team_id: team.id,
+                      kills: team.kills,
+                      rank: team.rank // Menangkap rank yang dikirim dari backend
+                    };
+                    if (typeof checkState === "function") checkState(state);
+                  }
+                });
+              }
+              previousMatchState = currentMatch;
+            }
+
+            // 3. Deteksi jika halaman ini adalah LIVE TICKER atau MATCH RANKING
+            else {
+              state.postmatch = data.postmatch;
+              state.teams = data.match_ranking;
+              if (typeof processState === "function") processState(state);
+            }
+            
+            isFetching = false;
           })
-          .catch((e) => {});
+          .catch(err => {
+            console.error("Gagal mengambil data dari Google Sheets:", err);
+            isFetching = false;
+          });
+      }
 
-        // Listen for real-time updates from Server
-        const evtSource = new EventSource("http://localhost:3000/api/stream");
-        evtSource.onmessage = (event) => {
-          try {
-            checkState(JSON.parse(event.data));
-          } catch (e) {}
-        };
-      })();
-    </script>
-  </body>
+      // Jalankan pengambilan data pertama kali saat halaman dimuat
+      fetchFromGoogleSheets();
+
+      // Lakukan Polling (Tarik Data) setiap 2 detik
+      setInterval(fetchFromGoogleSheets, 2000);
+
+      // Dengarkan perubahan dari Dashboard (Local Storage) untuk trigger instan
+      window.addEventListener("storage", function(e) {
+          if (e.key === "pubgm_overlay_state" && e.newValue) {
+              try {
+                  let state = JSON.parse(e.newValue);
+                  if(typeof checkState === "function") checkState(state);
+              } catch(err) { console.error("Storage parse error", err); }
+          }
+      });
+
+    })();
+  </script>
+</body>
+
 </html>

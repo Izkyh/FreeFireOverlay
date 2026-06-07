@@ -20,7 +20,7 @@ const server = http.createServer((req, res) => {
     if (req.url === '/api/state' && req.method === 'GET') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(state || {}));
-    } 
+    }
     else if (req.url === '/api/state' && req.method === 'POST') {
         let body = '';
         req.on('data', chunk => body += chunk.toString());
@@ -29,7 +29,7 @@ const server = http.createServer((req, res) => {
             // Broadcast ke semua overlay yang terkoneksi (vMix/OBS)
             clients.forEach(client => client.write(`data: ${body}\n\n`));
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({success: true}));
+            res.end(JSON.stringify({ success: true }));
         });
     }
     else if (req.url === '/api/stream') {
@@ -40,8 +40,8 @@ const server = http.createServer((req, res) => {
             'Connection': 'keep-alive'
         });
         clients.push(res);
-        if(state) res.write(`data: ${JSON.stringify(state)}\n\n`); // kirim state saat ini
-        
+        if (state) res.write(`data: ${JSON.stringify(state)}\n\n`); // kirim state saat ini
+
         req.on('close', () => {
             clients = clients.filter(client => client !== res);
         });
@@ -50,10 +50,10 @@ const server = http.createServer((req, res) => {
         // Static File Server
         let filePath = '.' + req.url;
         if (filePath === './') filePath = './dashboard.html';
-        
+
         const extname = String(path.extname(filePath)).toLowerCase();
         const mimeTypes = {
-            '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', 
+            '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
             '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpg',
             '.ttf': 'font/ttf'
         };
@@ -78,5 +78,8 @@ server.listen(PORT, () => {
     console.log('=============================================');
     console.log(`💻 Buka Dashboard di Chrome : http://localhost:${PORT}`);
     console.log(`🎥 Masukkan URL ke vMix/OBS : http://localhost:${PORT}/live-ticker.html`);
+    console.log(`🎥 Masukkan URL ke vMix/OBS : http://localhost:${PORT}/eliminated.html`);
+    console.log(`🎥 Masukkan URL ke vMix/OBS : http://localhost:${PORT}/overall-ranking.html`);
+    console.log(`🎥 Masukkan URL ke vMix/OBS : http://localhost:${PORT}/match-ranking.html`);
     console.log('=============================================');
 });
