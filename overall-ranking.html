@@ -73,7 +73,7 @@
     }
 
     .title-eyebrow {
-      font-size: 11px;
+      font-size: 30px;
       letter-spacing: 6px;
       color: #C89B3C;
       text-transform: uppercase;
@@ -81,7 +81,7 @@
     }
 
     .title-main {
-      font-size: 40px;
+      font-size: 50px;
       font-weight: bold;
       letter-spacing: 3px;
       line-height: 0.9;
@@ -369,12 +369,6 @@
         <div class="title-eyebrow">Piala Walikota</div>
         <div class="title-main" id="f_overall_title">OVERALL RANKINGS</div>
       </div>
-      <div class="match-info">
-        <div class="match-label">POST MATCH</div>
-        <div class="match-value">
-          DAY <span id="f_day">1</span> · M<span id="f_post_match">—</span>
-        </div>
-      </div>
     </div>
 
     <!-- GOLD DIVIDER -->
@@ -475,7 +469,7 @@
       sorted.forEach((t, i) => {
         const row = list.children[i];
         const pos = i + 1;
-        
+
         const plc = t.place_pts !== undefined ? t.place_pts : 0;
         const kp = t.kill_pts !== undefined ? t.kill_pts : 0;
         const tot = t.total !== undefined ? t.total : 0;
@@ -486,12 +480,12 @@
         }
 
         setCellText(0, `#${pos}`);
-        
+
         const teamCell = row.children[1];
         const img = teamCell.querySelector('.team-logo');
         const imgSrc = `team_logos/${t.id || pos}.png`;
         if (img && !img.src.endsWith(imgSrc)) img.src = imgSrc;
-        
+
         const nameSpan = teamCell.querySelector('.team-name-text');
         const nameVal = t.name || ('TEAM ' + pos);
         if (nameSpan && nameSpan.textContent !== nameVal) nameSpan.textContent = nameVal;
@@ -506,73 +500,73 @@
 
     setTimeout(() => play(), 500);
 
-// ==============================================================================
-// INTEGRASI GOOGLE APPS SCRIPT BACKEND (AUTO-POLLING)
-// ==============================================================================
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwZ15aIzh3YXL2BC0BGEcnlikWG2T40WPVUPRHD_Vl3GtPUmPJvnU4ayrVSlokvs--l/exec";
+    // ==============================================================================
+    // INTEGRASI GOOGLE APPS SCRIPT BACKEND (AUTO-POLLING)
+    // ==============================================================================
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwZ15aIzh3YXL2BC0BGEcnlikWG2T40WPVUPRHD_Vl3GtPUmPJvnU4ayrVSlokvs--l/exec";
 
-let previousMatchState = [];
-let isFetching = false;
+    let previousMatchState = [];
+    let isFetching = false;
 
-function fetchFromGoogleSheets() {
-    if (isFetching) return;
-    isFetching = true;
+    function fetchFromGoogleSheets() {
+      if (isFetching) return;
+      isFetching = true;
 
-    fetch(GAS_URL)
+      fetch(GAS_URL)
         .then(response => response.json())
         .then(data => {
-            let state = {};
-            
-            // 1. Deteksi jika halaman ini adalah OVERALL RANKING
-            if (document.getElementById("f_overall_title")) {
-                state.teams = data.overall_ranking;
-                if(typeof processState === "function") processState(state);
-            } 
-            
-            // 2. Deteksi jika halaman ini adalah ELIMINATED OVERLAY
-            else if (document.querySelector(".eliminated-card")) {
-                const currentMatch = data.match_ranking;
-                
-                // Deteksi tim yang baru saja "Mati" (Rata Lobi)
-                if (previousMatchState.length > 0) {
-                    currentMatch.forEach(team => {
-                        const prevTeam = previousMatchState.find(p => p.name === team.name);
-                        // Jika sebelumnya Alive (angkanya > 0) dan sekarang Alive menjadi 0
-                        if (prevTeam && prevTeam.alive > 0 && team.alive === 0) {
-                            state.eliminated_trigger = {
-                                timestamp: Date.now(),
-                                team_name: team.name,
-                                team_id: team.id,
-                                kills: team.kills,
-                                rank: team.rank // Menangkap rank yang dikirim dari backend
-                            };
-                            if(typeof checkState === "function") checkState(state);
-                        }
-                    });
+          let state = {};
+
+          // 1. Deteksi jika halaman ini adalah OVERALL RANKING
+          if (document.getElementById("f_overall_title")) {
+            state.teams = data.overall_ranking;
+            if (typeof processState === "function") processState(state);
+          }
+
+          // 2. Deteksi jika halaman ini adalah ELIMINATED OVERLAY
+          else if (document.querySelector(".eliminated-card")) {
+            const currentMatch = data.match_ranking;
+
+            // Deteksi tim yang baru saja "Mati" (Rata Lobi)
+            if (previousMatchState.length > 0) {
+              currentMatch.forEach(team => {
+                const prevTeam = previousMatchState.find(p => p.name === team.name);
+                // Jika sebelumnya Alive (angkanya > 0) dan sekarang Alive menjadi 0
+                if (prevTeam && prevTeam.alive > 0 && team.alive === 0) {
+                  state.eliminated_trigger = {
+                    timestamp: Date.now(),
+                    team_name: team.name,
+                    team_id: team.id,
+                    kills: team.kills,
+                    rank: team.rank // Menangkap rank yang dikirim dari backend
+                  };
+                  if (typeof checkState === "function") checkState(state);
                 }
-                previousMatchState = currentMatch;
-            } 
-            
-            // 3. Deteksi jika halaman ini adalah LIVE TICKER atau MATCH RANKING
-            else {
-                state.postmatch = data.postmatch;
-                state.teams = data.match_ranking;
-                if(typeof processState === "function") processState(state);
+              });
             }
-            
-            isFetching = false;
+            previousMatchState = currentMatch;
+          }
+
+          // 3. Deteksi jika halaman ini adalah LIVE TICKER atau MATCH RANKING
+          else {
+            state.postmatch = data.postmatch;
+            state.teams = data.match_ranking;
+            if (typeof processState === "function") processState(state);
+          }
+
+          isFetching = false;
         })
         .catch(err => {
-            console.error("Gagal mengambil data dari Google Sheets:", err);
-            isFetching = false;
+          console.error("Gagal mengambil data dari Google Sheets:", err);
+          isFetching = false;
         });
-}
+    }
 
-// Jalankan pengambilan data pertama kali saat halaman dimuat
-fetchFromGoogleSheets();
+    // Jalankan pengambilan data pertama kali saat halaman dimuat
+    fetchFromGoogleSheets();
 
-// Lakukan Polling (Tarik Data) setiap 2 detik
-setInterval(fetchFromGoogleSheets, 2000);
+    // Lakukan Polling (Tarik Data) setiap 2 detik
+    setInterval(fetchFromGoogleSheets, 2000);
   </script>
 </body>
 

@@ -283,27 +283,48 @@
     }
 
     let lastElimTimestamp = 0;
+    let elimQueue = [];
+    let isPlaying = false;
 
     function checkState(state) {
       if (state && state.eliminated_trigger) {
         let trigger = state.eliminated_trigger;
         if (trigger.timestamp > lastElimTimestamp && trigger.team_name) {
           lastElimTimestamp = trigger.timestamp;
-          // Update rank if available
-          const rankEl = document.getElementById("f_rank");
-          if (rankEl && trigger.rank) rankEl.innerHTML = "#" + trigger.rank;
-          // Update team logo if available
-          const logoEl = document.getElementById("f_logo");
-          if (logoEl && trigger.team_id) {
-            logoEl.src = "team_logos/" + trigger.team_id + ".png";
-            logoEl.style.display = "";
-          }
-          update({ f_team_name: trigger.team_name, f_kills: trigger.kills });
-          play();
-          // Auto-hide after 5 seconds
-          setTimeout(() => stop(), 5000);
+          elimQueue.push(trigger);
+          processQueue();
         }
       }
+    }
+
+    function processQueue() {
+      if (isPlaying || elimQueue.length === 0) return;
+      isPlaying = true;
+      let trigger = elimQueue.shift();
+
+      // Update rank if available
+      const rankEl = document.getElementById("f_rank");
+      if (rankEl && trigger.rank) rankEl.innerHTML = "#" + trigger.rank;
+      // Update team logo if available
+      const logoEl = document.getElementById("f_logo");
+      if (logoEl && trigger.team_id) {
+        logoEl.src = "team_logos/" + trigger.team_id + ".png";
+        logoEl.style.display = "";
+      }
+      update({ f_team_name: trigger.team_name, f_kills: trigger.kills });
+
+      // Reset state and play
+      document.getElementById("container").classList.remove("show");
+      setTimeout(() => {
+        play();
+        setTimeout(() => {
+          stop();
+          setTimeout(() => {
+            isPlaying = false;
+            processQueue();
+          }, 800); // Wait for CSS transition
+        }, 5000);
+      }, 50);
     }
 
     // === DEMO / PREVIEW MODE ===
@@ -354,15 +375,17 @@
             // 2. Deteksi jika halaman ini adalah ELIMINATED OVERLAY
             else if (document.querySelector(".eliminated-card")) {
               const currentMatch = data.match_ranking;
-              
+
               // Deteksi tim yang baru saja "Mati" (Rata Lobi)
               if (previousMatchState.length > 0) {
+                let currentTimestamp = Date.now();
                 currentMatch.forEach(team => {
                   const prevTeam = previousMatchState.find(p => p.name === team.name);
                   // Jika sebelumnya Alive (angkanya > 0) dan sekarang Alive menjadi 0
                   if (prevTeam && prevTeam.alive > 0 && team.alive === 0) {
+                    currentTimestamp++; // Ensure unique timestamp
                     state.eliminated_trigger = {
-                      timestamp: Date.now(),
+                      timestamp: currentTimestamp,
                       team_name: team.name,
                       team_id: team.id,
                       kills: team.kills,
@@ -381,7 +404,7 @@
               state.teams = data.match_ranking;
               if (typeof processState === "function") processState(state);
             }
-            
+
             isFetching = false;
           })
           .catch(err => {
@@ -397,13 +420,13 @@
       setInterval(fetchFromGoogleSheets, 2000);
 
       // Dengarkan perubahan dari Dashboard (Local Storage) untuk trigger instan
-      window.addEventListener("storage", function(e) {
-          if (e.key === "pubgm_overlay_state" && e.newValue) {
-              try {
-                  let state = JSON.parse(e.newValue);
-                  if(typeof checkState === "function") checkState(state);
-              } catch(err) { console.error("Storage parse error", err); }
-          }
+      window.addEventListener("storage", function (e) {
+        if (e.key === "pubgm_overlay_state" && e.newValue) {
+          try {
+            let state = JSON.parse(e.newValue);
+            if (typeof checkState === "function") checkState(state);
+          } catch (err) { console.error("Storage parse error", err); }
+        }
       });
 
     })();

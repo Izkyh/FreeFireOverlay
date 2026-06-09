@@ -71,8 +71,8 @@
         }
 
         .panel-header-title {
-            font-size: 28px;
-            font-weight: bold;
+            font-size: 40px;
+            font-weight: bolder;
             letter-spacing: 6px;
             color: #1A1A1A;
             text-transform: uppercase;
@@ -423,29 +423,64 @@
             } catch (e) { console.error("Update Error: ", e); }
         }
 
+        let firstRender = true;
+
         function processState(state) {
             if (state && state.teams) {
-                // Urutkan teams berdasarkan (Kill saat ini + Total Point dari Overall)
                 const sortedTeams = [...state.teams].map(t => {
                     let overall_pts = 0;
                     if (state.overall_ranking) {
                         const ot = state.overall_ranking.find(o => o.name === t.name);
-                        if (ot) overall_pts = ot.total; // Ambil Total Point dari OVERALL RANKING
+                        if (ot) overall_pts = ot.total;
                     }
                     const total_pts = (t.kills || 0) + overall_pts;
                     return { ...t, overall_pts, total_pts };
                 }).sort((a, b) => b.total_pts - a.total_pts || b.kills - a.kills);
 
-                const count = sortedTeams.length;
-                generateRows(count);
-                let newData = {};
+                const list = document.getElementById('team-list');
+                if (!list) return;
 
+                // 1. Record first positions for FLIP animation
+                const firstRects = {};
+                if (!firstRender) {
+                    Array.from(list.children).forEach(row => {
+                        firstRects[row.id] = row.getBoundingClientRect().top;
+                    });
+                }
+
+                // 2. Update or Create elements based on TEAM ID (not rank)
                 sortedTeams.forEach((t, i) => {
-                    let teamIndex = i + 1;
-                    newData[`f_team_${teamIndex}`] = t.name;
-                    newData[`f_elims_${teamIndex}`] = t.kills;
-                    newData[`f_pts_${teamIndex}`] = t.overall_pts; // Menampilkan murni Total Point Overall
-                    newData[`f_rank_${teamIndex}`] = `#${teamIndex}`; // Menampilkan posisi saat ini
+                    let rank = i + 1;
+                    let safeId = t.id || t.name.replace(/\s+/g, '_');
+                    let rowId = `row_team_${safeId}`;
+                    let row = document.getElementById(rowId);
+
+                    if (!row) {
+                        row = document.createElement("div");
+                        row.className = "team-row";
+                        row.id = rowId;
+                        row.innerHTML = `
+                            <div class="col-rank-val" id="rank_${rowId}"></div>
+                            <div class="col-team-cell">
+                                <img class="team-logo" id="logo_${rowId}" src="" onerror="this.style.display='none'">
+                                <span class="team-name-text col-team-inner" id="name_${rowId}"></span>
+                            </div>
+                            <div class="col-pts-val" id="pts_${rowId}">0</div>
+                            <div class="col-alive-cell" id="alive_${rowId}"></div>
+                            <div class="col-elims-val" id="elims_${rowId}">0</div>
+                        `;
+                        list.appendChild(row);
+                    }
+
+                    // Update data
+                    document.getElementById(`rank_${rowId}`).textContent = `#${rank}`;
+                    document.getElementById(`name_${rowId}`).textContent = t.name;
+                    document.getElementById(`pts_${rowId}`).textContent = t.overall_pts;
+                    document.getElementById(`elims_${rowId}`).textContent = t.kills;
+
+                    const logoEl = document.getElementById(`logo_${rowId}`);
+                    const expectedLogo = `team_logos/${t.id || rank}.png`;
+                    if (!logoEl.src.endsWith(expectedLogo)) logoEl.src = expectedLogo;
 
                     let aliveStr = "";
                     if (t.status === "MISS" || t.alive === 0) aliveStr = "DDDD";
@@ -454,11 +489,63 @@
                     else if (t.alive === 2) aliveStr = "WWDD";
                     else if (t.alive === 1) aliveStr = "WDDD";
 
-                    newData[`f_alive_${teamIndex}`] = aliveStr;
-                    const row = document.getElementById(`row_${teamIndex}`);
-                    if (row) row.classList.toggle("is-dead", t.status === "DEAD" || t.alive === 0);
+                    renderAlivePills(aliveStr, `alive_${rowId}`);
+
+                    row.classList.toggle("is-dead", t.status === "DEAD" || t.alive === 0);
                 });
-                update(newData);
+
+                // Remove deleted teams
+                Array.from(list.children).forEach(row => {
+                    const exists = sortedTeams.some(t => {
+                        let safeId = t.id || t.name.replace(/\s+/g, '_');
+                        return `row_team_${safeId}` === row.id;
+                    });
+                    if (!exists) list.removeChild(row);
+                });
+
+                // 3. Reorder DOM based on new rank
+                sortedTeams.forEach((t) => {
+                    let safeId = t.id || t.name.replace(/\s+/g, '_');
+                    let row = document.getElementById(`row_team_${safeId}`);
+                    if (row) {
+                        list.appendChild(row); // Moves it to correct DOM order
+                    }
+                });
+
+                if (firstRender) {
+                    firstRender = false;
+                    return;
+                }
+
+                // 4. Invert & Play (Smooth Sliding FLIP)
+                Array.from(list.children).forEach(row => {
+                    const oldTop = firstRects[row.id];
+                    if (oldTop !== undefined) {
+                        const newTop = row.getBoundingClientRect().top;
+                        const delta = oldTop - newTop;
+
+                        if (delta !== 0) {
+                            // Invert
+                            row.style.transition = 'none';
+                            row.style.transform = `translateY(${delta}px)`;
+
+                            // Play
+                            requestAnimationFrame(() => {
+                                requestAnimationFrame(() => {
+                                    row.style.transition = 'transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)';
+                                    row.style.transform = '';
+
+                                    // Clean up inline styles after animation
+                                    setTimeout(() => {
+                                        if (row.style.transform === '') {
+                                            row.style.transition = '';
+                                        }
+                                    }, 650);
+                                });
+                            });
+                        }
+                    }
+                });
             }
         }
 

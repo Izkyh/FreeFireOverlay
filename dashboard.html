@@ -1040,7 +1040,7 @@
     let countdownInterval = null;
     let countdownVal = 10;
     const SYNC_EVERY = 10;
-    const AUTO_ELIM_DELAY_MS = 2500;
+    const AUTO_ELIM_DELAY_MS = 0;
     let autoElimTimers = {};
 
     function connectSheets() {
@@ -1435,8 +1435,10 @@
       markAutoEliminated(t.id);
       state.eliminated_trigger = {
         team_name: t.name,
+        team_id: t.id,
+        rank: t.rank,
         kills: t.kills,
-        timestamp: Date.now(),
+        timestamp: Date.now() + index, // Ensure unique timestamp
       };
       renderAll();
       saveState();
